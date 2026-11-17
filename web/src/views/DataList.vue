@@ -510,7 +510,7 @@ onMounted(async () => {
             v-model="importForm.content"
             rows="10"
             style="width:100%;margin-top:10px;border:1px solid var(--bd);border-radius:6px;padding:8px;font-family:inherit;font-size:12px"
-            placeholder="物料名称,规格型号,计量单位,物料分类,..."
+            placeholder="首行为字段名称，可粘贴 CSV 内容或上传文件，例如：姓名,所属大区,直属上级,岗位,..."
           />
         </div>
       </div>
