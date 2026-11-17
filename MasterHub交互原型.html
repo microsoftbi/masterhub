@@ -1,0 +1,1834 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>MasterHub 主数据管理系统 · 交互原型 V0.1</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--p:#2563eb;--pd:#1d4ed8;--pl:#dbeafe;--bg:#f1f5f9;--card:#fff;--bd:#e2e8f0;--tx:#0f172a;--mut:#64748b;--sd:#0f172a;--sd2:#1e293b;--ok:#16a34a;--okbg:#dcfce7;--warn:#d97706;--warnbg:#fef3c7;--err:#dc2626;--errbg:#fee2e2;--purple:#7c3aed;--purplebg:#ede9fe}
+html,body{height:100%}
+body{font:13px/1.6 -apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;color:var(--tx);background:var(--bg);overflow:hidden}
+svg.ic{width:15px;height:15px;flex:none;vertical-align:-2px}
+a{color:inherit;text-decoration:none}
+.muted{color:var(--mut)}
+.mt10{margin-top:10px}.mt14{margin-top:14px}
+.flex{display:flex;align-items:center;gap:8px}
+.fr{margin-left:auto}
+.num{font-variant-numeric:tabular-nums}
+
+/* ===== 布局骨架 ===== */
+.app{display:grid;grid-template-rows:48px 1fr;height:100vh}
+.app .body{display:grid;grid-template-columns:216px 1fr;overflow:hidden;transition:grid-template-columns .2s}
+.app.pbi .body{grid-template-columns:0 1fr}
+.app.pbi .sidebar{overflow:hidden;padding:0;border:none}
+.main{overflow:auto;min-width:0}
+.screen{display:none}
+.screen.active{display:block}
+#s-workflow.active,#s-dashboard.active{display:flex}
+
+/* ===== 顶栏 ===== */
+.topbar{height:48px;background:var(--sd);display:flex;align-items:center;padding:0 16px;gap:14px;color:#fff}
+.logo{font-weight:700;font-size:15px;display:flex;align-items:center;gap:8px;white-space:nowrap}
+.logo b{color:#60a5fa}
+.logo .sub{font-size:11px;color:#94a3b8;font-weight:400}
+.proto-badge{background:#c2410c;color:#fff;font-size:11px;padding:1px 8px;border-radius:4px;font-weight:400;margin-left:4px;white-space:nowrap}
+.top-search{margin-left:auto;display:flex;align-items:center;gap:6px;background:var(--sd2);border-radius:6px;padding:5px 10px;color:#94a3b8;width:250px}
+.top-search input{background:none;border:none;outline:none;color:#e2e8f0;font-size:12px;flex:1}
+.icon-btn{position:relative;width:30px;height:30px;display:flex;align-items:center;justify-content:center;border-radius:6px;cursor:pointer;color:#cbd5e1}
+.icon-btn:hover{background:var(--sd2);color:#fff}
+.icon-btn .dot{position:absolute;top:5px;right:5px;width:7px;height:7px;border-radius:50%;background:var(--err)}
+.avatar{width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#3b82f6,#8b5cf6);display:flex;align-items:center;justify-content:center;font-size:12px;color:#fff;flex:none}
+
+/* ===== 侧边导航 ===== */
+.sidebar{background:var(--sd);color:#cbd5e1;overflow-y:auto;padding:10px 0 24px}
+.gtitle{padding:14px 18px 6px;font-size:11px;color:#475569;letter-spacing:1px;white-space:nowrap}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 18px;cursor:pointer;font-size:13px;border-left:3px solid transparent;white-space:nowrap}
+.nav-item:hover{background:var(--sd2);color:#fff}
+.nav-item.active{background:var(--sd2);color:#fff;border-color:var(--p)}
+.nav-item .cnt{margin-left:auto;background:var(--err);color:#fff;border-radius:9px;padding:0 7px;font-size:11px;line-height:17px}
+
+/* ===== 通用组件 ===== */
+.wrap{padding:16px 18px 30px;max-width:1440px}
+.page-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px;gap:12px;flex-wrap:wrap}
+.page-head h2{font-size:18px}
+.page-head .desc{color:var(--mut);font-size:12px;margin-top:2px}
+.card{background:#fff;border:1px solid var(--bd);border-radius:10px;overflow:hidden}
+.card-head{padding:12px 16px;border-bottom:1px solid var(--bd);font-weight:600;display:flex;justify-content:space-between;align-items:center;gap:8px}
+.card-body{padding:14px 16px}
+.grid-2{display:grid;grid-template-columns:2fr 1fr;gap:12px}
+.cards-row{display:flex;gap:12px;margin-bottom:14px;flex-wrap:wrap}
+.kpi{flex:1;min-width:150px;background:#fff;border:1px solid var(--bd);border-radius:10px;padding:13px 16px}
+.k-label{font-size:12px;color:var(--mut)}
+.k-num{font-size:23px;font-weight:700;margin:2px 0;font-variant-numeric:tabular-nums}
+.k-delta{font-size:12px}
+.k-delta.up{color:var(--ok)}.k-delta.down{color:var(--err)}
+
+.btn{display:inline-flex;align-items:center;gap:5px;border:1px solid var(--bd);background:#fff;color:var(--tx);border-radius:6px;padding:5px 12px;font-size:13px;cursor:pointer;transition:.15s;white-space:nowrap}
+.btn:hover{border-color:#cbd5e1;background:#f8fafc}
+.btn.primary{background:var(--p);border-color:var(--p);color:#fff}
+.btn.primary:hover{background:var(--pd)}
+.btn.danger{color:var(--err);border-color:#fecaca}
+.btn.danger:hover{background:#fef2f2}
+.btn.sm{padding:2px 9px;font-size:12px}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+
+.tag{display:inline-block;padding:0 8px;border-radius:10px;font-size:12px;line-height:20px;white-space:nowrap}
+.tag.g{color:#15803d;background:var(--okbg)}.tag.o{color:#b45309;background:var(--warnbg)}
+.tag.b{color:var(--pd);background:var(--pl)}.tag.p{color:#6d28d9;background:var(--purplebg)}
+.tag.s{color:#475569;background:#e2e8f0}.tag.r{color:var(--err);background:var(--errbg)}
+
+.tbl{width:100%;border-collapse:collapse;background:#fff}
+.tbl th{background:#f8fafc;color:#475569;font-weight:500;text-align:left;padding:8px 10px;border-bottom:1px solid var(--bd);white-space:nowrap;font-size:12px}
+.tbl td{padding:8px 10px;border-bottom:1px solid #f1f5f9;vertical-align:middle}
+.tbl tbody tr:hover td{background:#f8fbff}
+.tbl td .link{margin-right:8px}
+.link{color:var(--p);cursor:pointer}
+.link:hover{text-decoration:underline}
+
+.tabs{display:flex;gap:2px;border-bottom:1px solid var(--bd);margin-bottom:14px;flex-wrap:wrap}
+.tab{padding:8px 16px;cursor:pointer;color:var(--mut);border-bottom:2px solid transparent;position:relative;top:1px;font-size:13px}
+.tab:hover{color:var(--tx)}
+.tab.active{color:var(--p);border-color:var(--p);font-weight:600}
+.tab-pane{display:none}.tab-pane.show{display:block}
+.pp-pane{display:none}.pp-pane.on{display:block}
+.pbi-page{display:none}.pbi-page.show{display:block}
+.r-pane{display:none}.r-pane.on{display:block}
+.wz-pane{display:none}.wz-pane.show{display:block}
+
+.fbar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px;align-items:center}
+.f-item{display:flex;align-items:center;gap:6px}
+.f-item label{color:var(--mut);font-size:12px;white-space:nowrap}
+.f-item input,.f-item select{border:1px solid var(--bd);border-radius:6px;padding:5px 8px;font-size:12px;outline:none;background:#fff}
+.pgn{display:flex;justify-content:flex-end;gap:4px;align-items:center;color:var(--mut);font-size:12px;flex-wrap:wrap}
+.pgn button{min-width:26px;height:26px;border:1px solid var(--bd);background:#fff;border-radius:5px;cursor:pointer;font-size:12px}
+.pgn button.cur{background:var(--p);color:#fff;border-color:var(--p)}
+
+/* 弹层：抽屉与模态 */
+.layer{position:fixed;inset:0;z-index:40;display:none}
+.layer.show{display:block}
+.l-mask{position:absolute;inset:0;background:rgba(15,23,42,.45)}
+.layer .drawer{position:absolute;top:0;right:0;height:100%;width:520px;max-width:94vw;background:#fff;display:flex;flex-direction:column;box-shadow:-8px 0 24px rgba(15,23,42,.12);animation:slideIn .22s}
+.layer .drawer.w560{width:560px}
+@keyframes slideIn{from{transform:translateX(36px);opacity:.3}}
+.d-title{display:flex;justify-content:space-between;align-items:center;padding:13px 18px;border-bottom:1px solid var(--bd);font-weight:600;font-size:15px}
+.d-title .x{cursor:pointer;color:var(--mut);font-size:16px;padding:0 4px}
+.d-body{flex:1;overflow:auto;padding:16px 18px}
+.d-foot{padding:12px 18px;border-top:1px solid var(--bd);display:flex;gap:8px;justify-content:flex-end;background:#f8fafc;flex-wrap:wrap}
+.modal-center{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:20px}
+.m-box{background:#fff;border-radius:10px;width:680px;max-width:96vw;max-height:90vh;display:flex;flex-direction:column;box-shadow:0 12px 40px rgba(15,23,42,.22);animation:popIn .18s}
+.m-box.w840{width:840px}
+@keyframes popIn{from{transform:translateY(10px);opacity:.5}}
+.m-title{display:flex;justify-content:space-between;align-items:center;padding:14px 18px;border-bottom:1px solid var(--bd);font-weight:600;font-size:15px}
+.m-body{flex:1;overflow:auto;padding:16px 18px}
+.m-foot{padding:12px 18px;border-top:1px solid var(--bd);display:flex;gap:8px;justify-content:flex-end;background:#f8fafc}
+
+/* 表单 */
+.form-item{margin-bottom:12px}
+.form-item>label{display:block;margin-bottom:4px;color:#334155;font-size:12px}
+.form-item.req>label::after{content:" *";color:var(--err)}
+.form-item input[type=text],.form-item input[type=number],.form-item input[type=password],.form-item select,.form-item textarea{width:100%;border:1px solid var(--bd);border-radius:6px;padding:6px 10px;font-size:13px;outline:none;background:#fff;font-family:inherit}
+.form-item :is(input,select,textarea):focus{border-color:var(--p);box-shadow:0 0 0 3px var(--pl)}
+.radio-row{display:flex;gap:16px;flex-wrap:wrap}
+.grid-form{display:grid;grid-template-columns:1fr 1fr;gap:0 16px}
+.hint{font-size:12px;color:var(--mut)}
+.kv{display:flex;justify-content:space-between;gap:10px;padding:5px 0;border-bottom:1px dashed #eef2f7;font-size:12px}
+.kv b{font-weight:500;color:var(--mut);flex:none}
+
+/* 步骤条 / 上传 / 进度 */
+.steps{display:flex;margin:4px 0 18px}
+.step{flex:1;text-align:center;font-size:12px;color:var(--mut);position:relative;min-width:0}
+.step i{display:block;width:24px;height:24px;line-height:24px;margin:0 auto 6px;border-radius:50%;background:#e2e8f0;color:#64748b;font-style:normal;font-weight:600}
+.step::after{content:"";position:absolute;top:12px;left:calc(50% + 20px);width:calc(100% - 40px);height:2px;background:#e2e8f0}
+.step:last-child::after{display:none}
+.step.on{color:var(--p);font-weight:600}
+.step.on i{background:var(--p);color:#fff}
+.step.done i{background:var(--ok);color:#fff}
+.step.done::after{background:var(--ok)}
+.dropzone{border:2px dashed #cbd5e1;border-radius:8px;padding:32px 0;text-align:center;color:var(--mut);cursor:pointer;background:#fafcff}
+.dropzone:hover{border-color:var(--p);color:var(--p)}
+.progress{height:8px;background:#e2e8f0;border-radius:4px;overflow:hidden}
+.progress>i{display:block;height:100%;width:0;background:var(--p);transition:width .35s}
+
+/* 对比 / 时间线 */
+.diff td.old{color:var(--err);background:#fef2f2;text-decoration:line-through}
+.diff td.new{color:#15803d;background:#f0fdf4}
+.tl{position:relative;padding-left:16px}
+.tl-item{position:relative;padding-bottom:14px}
+.tl-item::before{content:"";position:absolute;left:-13px;top:4px;width:9px;height:9px;border-radius:50%;background:#cbd5e1}
+.tl-item.cur::before{background:var(--p);box-shadow:0 0 0 3px var(--pl)}
+.tl-item.ok::before{background:var(--ok)}
+
+/* 待办 / 审批条目 */
+.todo-item{display:flex;align-items:center;gap:10px;padding:10px 2px;border-bottom:1px dashed #eef2f7;cursor:pointer}
+.todo-item:hover .t-title{color:var(--p)}
+.t-title{font-weight:500}
+.t-meta{font-size:11px;color:var(--mut)}
+.ap-item{display:flex;align-items:center;gap:12px;padding:13px 16px;border-bottom:1px solid #f1f5f9}
+.ap-ico{width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex:none}
+.ap-ico.b{background:var(--pl);color:var(--pd)}.ap-ico.o{background:var(--warnbg);color:#b45309}.ap-ico.p{background:var(--purplebg);color:#6d28d9}
+.ap-t{font-weight:600}
+.ap-m{font-size:11.5px;color:var(--mut)}
+.overtime{color:var(--err);font-weight:600}
+
+/* 开关 */
+.sw{width:34px;height:19px;border-radius:10px;background:#cbd5e1;position:relative;cursor:pointer;transition:.2s;flex:none;display:inline-block;vertical-align:middle}
+.sw::after{content:"";position:absolute;left:2px;top:2px;width:15px;height:15px;border-radius:50%;background:#fff;transition:.2s}
+.sw.on{background:var(--ok)}
+.sw.on::after{left:17px}
+
+/* Toast */
+#toasts{position:fixed;bottom:22px;right:22px;z-index:99;display:flex;flex-direction:column;gap:8px}
+.toast{background:#0f172a;color:#fff;padding:9px 16px;border-radius:8px;font-size:13px;opacity:0;transform:translateY(8px);transition:.25s;max-width:380px}
+.toast.on{opacity:1;transform:none}
+.toast.err{background:var(--err)}
+
+/* 设计要点弹层 */
+.notes-btn{border:1px dashed #94a3b8;color:#475569}
+.notes-pop{position:absolute;top:36px;right:0;width:330px;background:#fff;border:1px solid var(--bd);border-radius:10px;box-shadow:0 8px 24px rgba(15,23,42,.14);padding:14px 16px;z-index:30;display:none;font-size:12px;color:#334155}
+.notes-pop.show{display:block}
+.notes-pop b{display:block;margin-bottom:6px;font-size:13px}
+.notes-pop li{margin-left:16px;margin-bottom:3px;line-height:1.5}
+
+/* ===== 数据工作流（对标 Alteryx） ===== */
+#s-workflow{flex-direction:column;height:calc(100vh - 48px)}
+.wf-toolbar{height:44px;background:#f8fafc;border-bottom:1px solid var(--bd);display:flex;align-items:center;padding:0 10px;gap:3px;flex:none}
+.tb-btn{display:inline-flex;align-items:center;gap:5px;padding:5px 10px;border-radius:6px;cursor:pointer;color:#334155;font-size:12px;border:none;background:none}
+.tb-btn:hover{background:#e2e8f0}
+.tb-btn.run{color:#fff;background:var(--ok)}
+.tb-sep{width:1px;height:20px;background:var(--bd);margin:0 6px}
+.wf-body{flex:1;display:flex;min-height:0;position:relative}
+.wf-toolbox{width:216px;border-right:1px solid var(--bd);background:#fff;overflow-y:auto;flex:none}
+.grp-h{display:flex;justify-content:space-between;align-items:center;padding:8px 12px;font-size:12px;font-weight:600;color:#475569;background:#f8fafc;border-bottom:1px solid #eef2f7;cursor:pointer;user-select:none}
+.grp-h svg{transition:.2s}
+.grp.closed .grp-h svg{transform:rotate(-90deg)}
+.grp.closed .grp-items{display:none}
+.grp-items{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;padding:8px}
+.tool{display:flex;flex-direction:column;align-items:center;gap:5px;padding:8px 2px 6px;border-radius:8px;cursor:grab;text-align:center;border:1px solid transparent}
+.tool:hover{background:var(--pl);border-color:#bfdbfe}
+.tool .t-ico{width:36px;height:36px;border-radius:8px;background:#eff6ff;color:var(--pd);display:flex;align-items:center;justify-content:center}
+.tool .t-ico svg{width:21px;height:21px}
+.tool .t-lb{font-size:11px;color:#334155;line-height:1.3;min-height:28px}
+.wf-cv-wrap{flex:1;overflow:auto;position:relative;background:#fbfdff;background-image:radial-gradient(#dbe4ef 1px,transparent 1px);background-size:18px 18px}
+.wf-cv{position:relative;width:1140px;height:440px}
+.wf-svg{position:absolute;inset:0;pointer-events:none}
+.wf-edge{stroke:#94a3b8;stroke-width:1.8;fill:none}
+.wf-edge.lit{stroke:var(--ok)}
+.wf-node{position:absolute;width:150px;height:46px;background:#fff;border:1.5px solid #cbd5e1;border-radius:8px;display:flex;align-items:center;gap:8px;padding:0 8px;cursor:pointer;box-shadow:0 1px 3px rgba(15,23,42,.08);user-select:none}
+.wf-node:hover{border-color:var(--p)}
+.wf-node.sel{border-color:var(--p);box-shadow:0 0 0 3px var(--pl)}
+.wf-node .n-ico{width:30px;height:30px;border-radius:6px;background:#eff6ff;color:var(--pd);display:flex;align-items:center;justify-content:center;flex:none}
+.wf-node .n-lb{font-size:12px;font-weight:600;line-height:1.2}
+.wf-node .n-sub{font-size:11px;color:var(--mut);line-height:1.2}
+.wf-node .port{position:absolute;width:9px;height:9px;border-radius:50%;background:#fff;border:2px solid #94a3b8;top:50%;transform:translateY(-50%)}
+.wf-node .port.in{left:-5px}.wf-node .port.out{right:-5px}
+.wf-node .n-check{position:absolute;top:-8px;right:-8px;width:18px;height:18px;border-radius:50%;background:var(--ok);color:#fff;display:none;align-items:center;justify-content:center}
+.wf-node .n-check svg{width:11px;height:11px}
+.wf-node.done .n-check{display:flex}
+.wf-node.done{border-color:var(--ok)}
+.wf-cfg{position:absolute;left:14px;top:12px;width:302px;background:#fff;border:1px solid var(--bd);border-radius:10px;box-shadow:0 6px 20px rgba(15,23,42,.13);z-index:5;display:none}
+.wf-cfg.show{display:block}
+.wf-cfg .c-head{display:flex;justify-content:space-between;align-items:center;padding:9px 12px;border-bottom:1px solid var(--bd);font-weight:600;font-size:13px;background:#f8fafc;border-radius:10px 10px 0 0}
+.wf-cfg .c-head .x{cursor:pointer;color:var(--mut)}
+.wf-cfg .c-body{padding:12px;max-height:280px;overflow:auto}
+.wf-res{height:0;border-top:1px solid var(--bd);background:#fff;transition:height .2s;overflow:hidden;display:flex;flex-direction:column;flex:none}
+.wf-res.show{height:236px}
+.wf-res .r-tabs{display:flex;border-bottom:1px solid var(--bd);padding:0 8px;align-items:center}
+.wf-res .r-tab{padding:7px 14px;font-size:12px;cursor:pointer;color:var(--mut);border-bottom:2px solid transparent}
+.wf-res .r-tab.active{color:var(--p);border-color:var(--p);font-weight:600}
+.wf-res .r-head{padding:8px 14px 4px;font-size:12px;color:var(--mut)}
+.wf-res .r-pane-wrap{flex:1;overflow:auto;padding:0 8px 8px}
+
+/* ===== 治理仪表板（对标 Power BI） ===== */
+#s-dashboard{flex-direction:column;height:calc(100vh - 48px);background:#e8ebef}
+.pbi-top{height:44px;background:#fff;border-bottom:1px solid var(--bd);display:flex;align-items:center;padding:0 12px;gap:8px;flex:none;position:relative;z-index:20}
+.pbi-crumb{font-size:13px;color:var(--mut);white-space:nowrap}
+.pbi-crumb b{color:var(--tx)}
+.vm-btn{display:inline-flex;gap:6px;align-items:center;padding:5px 12px;border:1px solid var(--bd);border-radius:6px;background:#fff;cursor:pointer;font-size:12px;white-space:nowrap}
+.vm-btn:hover{background:#f8fafc}
+.vmenu{position:absolute;top:38px;right:0;background:#fff;border:1px solid var(--bd);border-radius:8px;box-shadow:0 8px 24px rgba(15,23,42,.14);min-width:160px;z-index:40;display:none;padding:4px}
+.vmenu.show{display:block}
+.vmenu .vm-it{padding:7px 12px;border-radius:5px;cursor:pointer;display:flex;justify-content:space-between;font-size:12px;gap:12px}
+.vmenu .vm-it:hover{background:#f1f5f9}
+.pbi-body{flex:1;display:flex;min-height:0}
+.pbi-canvas{flex:1;overflow:auto;padding:12px;min-width:0}
+.pbi-canvas-in{display:flex;flex-direction:column;gap:10px;min-width:880px}
+.vrow{display:flex;gap:10px;align-items:stretch}
+.visual{background:#fff;border:1px solid transparent;border-radius:2px;padding:8px 10px 8px;position:relative;min-width:0}
+.visual:hover{border-color:#c8cdd4}
+.visual.sel{border-color:#8a8886;box-shadow:0 0 0 1px #8a8886}
+.v-tools{position:absolute;top:2px;right:4px;display:none;gap:2px;z-index:3}
+.visual:hover .v-tools{display:flex}
+.vt-btn{width:22px;height:22px;display:flex;align-items:center;justify-content:center;border-radius:4px;background:#fff;border:1px solid var(--bd);color:#334155;cursor:pointer}
+.vt-btn:hover{background:#f1f5f9}
+.vt-btn svg{width:12px;height:12px}
+.v-title{font-size:12.5px;font-weight:600;color:#333;padding:2px 0 6px}
+.v-kpis{display:flex;gap:10px}
+.v-kpi{flex:1;background:#fff;padding:12px 14px;position:relative;border:1px solid transparent}
+.v-kpi:hover{border-color:#c8cdd4}
+.v-kpi .vk-l{font-size:12px;color:#605e5c;padding-bottom:12px}
+.v-kpi .vk-v{font-size:26px;font-weight:600;color:#252423;font-variant-numeric:tabular-nums}
+.v-kpi .vk-d{font-size:11px;margin-top:2px}
+.slicer{padding:6px 8px}
+.slicer .s-l{font-size:12px;color:#605e5c;font-weight:600;margin-bottom:6px}
+.s-btn{display:inline-block;border:1px solid var(--bd);border-radius:4px;padding:3px 12px;margin:0 4px 4px 0;cursor:pointer;font-size:12px;color:#333;background:#fff}
+.s-btn.on{background:var(--p);border-color:var(--p);color:#fff}
+.pbi-panel{width:300px;flex:none;background:#fff;border-left:1px solid var(--bd);display:flex;flex-direction:column;min-height:0}
+.pp-tabs{display:flex;border-bottom:1px solid var(--bd);flex:none}
+.pp-tab{flex:1;text-align:center;padding:9px 0;font-size:12px;cursor:pointer;color:var(--mut);border-bottom:2px solid transparent}
+.pp-tab.active{color:#252423;font-weight:600;border-color:var(--p);background:#faf9f8}
+.pp-body{flex:1;overflow:auto;padding:12px}
+.app.pbi-read .pbi-panel{display:none}
+.app.pbi-read .v-tools{display:none!important}
+.chart-types{display:grid;grid-template-columns:repeat(6,1fr);gap:6px;margin-bottom:12px}
+.ctype{aspect-ratio:1;display:flex;align-items:center;justify-content:center;border:1px solid var(--bd);border-radius:4px;cursor:pointer;color:#605e5c}
+.ctype.on{border-color:#252423;background:#e8e6e3;color:#252423}
+.ctype svg{width:18px;height:18px}
+.pp-sec{font-size:11px;font-weight:700;color:#605e5c;text-transform:uppercase;margin:12px 0 6px;letter-spacing:.5px}
+.f-item-pbi{border:1px solid var(--bd);border-radius:6px;padding:8px 10px;margin-bottom:8px}
+.f-item-pbi .fi-t{display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px}
+.f-item-pbi .fi-t b{font-weight:600}
+.f-x{cursor:pointer;color:#605e5c;padding:0 3px}
+.fld{display:flex;align-items:center;gap:6px;padding:4px 2px;font-size:12px;cursor:pointer;user-select:none}
+.fld svg{width:12px;height:12px;color:#605e5c}
+.fld .co{color:#e8a33d}
+.pbi-pages{height:34px;background:#fff;border-top:1px solid var(--bd);display:flex;align-items:center;padding:0 10px;gap:4px;flex:none}
+.pg{padding:5px 14px;font-size:12px;border:1px solid transparent;border-radius:4px;cursor:pointer;color:#605e5c;white-space:nowrap}
+.pg.active{border-color:#252423;background:#fff;font-weight:600;color:#252423}
+.pg:hover{background:#f3f2f1}
+.dchip{display:inline-flex;align-items:center;gap:6px;background:#fff;border:1px solid var(--bd);border-radius:14px;padding:2px 10px;font-size:12px}
+.dlegend{display:flex;flex-wrap:wrap;gap:4px 14px;padding-top:8px}
+.dlegend i{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:5px;vertical-align:-1px}
+</style>
+</head>
+<body>
+<svg style="display:none" xmlns="http://www.w3.org/2000/svg">
+<defs>
+<symbol id="ic-home" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 10.5 12 3.5l8.5 7"/><path d="M5.5 9.5V20h13V9.5"/><path d="M10 20v-5h4v5"/></symbol>
+<symbol id="ic-table" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="4.5" width="17" height="15" rx="1.5"/><path d="M3.5 9.5h17M3.5 14.5h17M9.5 4.5v15"/></symbol>
+<symbol id="ic-model" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="3.5" width="7" height="5.5" rx="1"/><rect x="13.5" y="3.5" width="7" height="5.5" rx="1"/><rect x="8.5" y="15" width="7" height="5.5" rx="1"/><path d="M7 9v3h10V9M12 12v3"/></symbol>
+<symbol id="ic-book" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5.5C6 4.3 9 4.3 12 6c3-1.7 6-1.7 8-.5V18c-2-1.2-5-1.2-8 .5-3-1.7-6-1.7-8-.5Z"/><path d="M12 6v12.5"/></symbol>
+<symbol id="ic-shield" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 20 6v5c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6Z"/><path d="m8.8 12 2.2 2.2 4.2-4.4"/></symbol>
+<symbol id="ic-link" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9.5 14.5 14.5 9.5"/><path d="M8 11 5.5 13.5a3.5 3.5 0 0 0 5 5L13 16"/><path d="M16 13l2.5-2.5a3.5 3.5 0 0 0-5-5L11 8"/></symbol>
+<symbol id="ic-flow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3.5" width="7" height="5" rx="1"/><rect x="14" y="9.5" width="7" height="5" rx="1"/><rect x="3" y="15.5" width="7" height="5" rx="1"/><path d="M10 6h3.5a2 2 0 0 1 2 2v1.5M14 12h-1.5a2 2 0 0 0-2 2v1.5"/></symbol>
+<symbol id="ic-approve" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="3" width="11" height="18" rx="1.5"/><path d="M8 8h5M8 11.5h5"/><path d="m8.5 16.5 2 2 4.5-5"/></symbol>
+<symbol id="ic-chart" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h16"/><rect x="6" y="11" width="3.2" height="6"/><rect x="11" y="7" width="3.2" height="10"/><rect x="16" y="13" width="3.2" height="4"/></symbol>
+<symbol id="ic-set" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.2"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M18.4 5.6l-2.1 2.1M7.7 16.3l-2.1 2.1"/></symbol>
+<symbol id="ic-db" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5.5" rx="7.5" ry="2.8"/><path d="M4.5 5.5v13c0 1.5 3.4 2.8 7.5 2.8s7.5-1.3 7.5-2.8v-13"/><path d="M4.5 12c0 1.5 3.4 2.8 7.5 2.8s7.5-1.3 7.5-2.8"/></symbol>
+<symbol id="ic-excel" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="4.5" width="17" height="15" rx="1.5"/><path d="M3.5 9.5h17M9.5 9.5v10M3.5 14.5h17"/></symbol>
+<symbol id="ic-txt" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3.5h8l4 4V20.5H6Z"/><path d="M14 3.5v4h4"/><path d="M9 12h6M9 15.5h6"/></symbol>
+<symbol id="ic-md" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20.5 7.5 12 3 3.5 7.5v9L12 21l8.5-4.5Z"/><path d="M3.5 7.5 12 12l8.5-4.5M12 12v9"/></symbol>
+<symbol id="ic-filter" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16l-6 7v6l-4 2v-8Z"/></symbol>
+<symbol id="ic-cols" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="4.5" width="17" height="15" rx="1.5"/><path d="M9.2 4.5v15M14.8 4.5v15"/></symbol>
+<symbol id="ic-fx" viewBox="0 0 24 24" fill="currentColor" stroke="none"><text x="12" y="17" text-anchor="middle" font-size="15" font-style="italic" font-family="Georgia,serif">fx</text></symbol>
+<symbol id="ic-unique" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="9" cy="12" r="4.5"/><circle cx="15" cy="12" r="4.5"/></symbol>
+<symbol id="ic-sort" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M8 19V5M5 8l3-3 3 3"/><path d="M16 5v14M13 16l3 3 3-3"/></symbol>
+<symbol id="ic-sample" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="3 2.5"><rect x="4" y="4" width="16" height="16" rx="2"/></symbol>
+<symbol id="ic-merge" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h5l4 6h6M4 18h5l4-6"/><path d="M17 12v0M17 9.5 19.5 12 17 14.5"/></symbol>
+<symbol id="ic-sum" viewBox="0 0 24 24" fill="currentColor" stroke="none"><text x="12" y="17.5" text-anchor="middle" font-size="17" font-family="Georgia,serif">Σ</text></symbol>
+<symbol id="ic-cross" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20 7A8.2 8.2 0 0 0 6 7M6 4v3h3"/><path d="M4 17a8.2 8.2 0 0 0 14 0M18 20v-3h-3"/></symbol>
+<symbol id="ic-transp" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="6" width="12" height="12" rx="1.5"/><path d="M6 12h12M12 6v12" opacity=".5"/><path d="M3 6h1.5M3 18h1.5M19.5 6H21M19.5 18H21"/></symbol>
+<symbol id="ic-join" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="9.5" cy="12" r="5.5"/><circle cx="14.5" cy="12" r="5.5"/></symbol>
+<symbol id="ic-union" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M5 8v9a2 2 0 0 0 2 2h12"/><path d="M5 8a2 2 0 0 1 2-2h12" opacity=".4"/></symbol>
+<symbol id="ic-fuzzy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M3 12c2-5 4-5 6 0s4 5 6 0 4-5 6 0"/></symbol>
+<symbol id="ic-map" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h6l4 10h6"/><path d="M17.5 14 20 16.5 17.5 19"/></symbol>
+<symbol id="ic-broom" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M12 3.5v4M12 16.5v4M3.5 12h4M16.5 12h4M6 6l2.5 2.5M15.5 15.5 18 18M18 6l-2.5 2.5M8.5 15.5 6 18"/></symbol>
+<symbol id="ic-fill" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M8 11.5 13.5 6l6 6-5.5 5.5Z"/><path d="M11 9 5 15l2.5 2.5 3-3"/><path d="M19.5 16.5c.8 1 .8 3-1 3s-1.8-2-1-3Z" fill="currentColor"/></symbol>
+<symbol id="ic-out" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="13.5" y="6" width="7" height="12" rx="1.5"/><path d="M3.5 12h10M10.5 9l3 3-3 3"/></symbol>
+<symbol id="ic-browse" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12Z"/><circle cx="12" cy="12" r="3"/></symbol>
+<symbol id="ic-record" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="10" height="10" rx="1.5"/><rect x="10" y="10" width="10" height="10" rx="1.5"/></symbol>
+<symbol id="ic-append" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4.5" width="16" height="5.5" rx="1"/><rect x="4" y="14" width="16" height="5.5" rx="1" opacity=".4"/><path d="M9 11.7v.9M12 11.7v.9M15 11.7v.9"/></symbol>
+<symbol id="ic-play" viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M8 5.2 19 12 8 18.8Z"/></symbol>
+<symbol id="ic-stop" viewBox="0 0 24 24" fill="currentColor" stroke="none"><rect x="7" y="7" width="10" height="10" rx="1.5"/></symbol>
+<symbol id="ic-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m5 13 4.5 4.5L19 7"/></symbol>
+<symbol id="ic-save" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M5 3.5h11l3.5 3.5v13.5H5Z"/><path d="M8 3.5V8h7V3.5"/><rect x="8" y="13" width="8" height="7"/></symbol>
+<symbol id="ic-undo" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M8 5 4 9l4 4"/><path d="M4 9h10a6 6 0 0 1 0 12h-3"/></symbol>
+<symbol id="ic-redo" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="m16 5 4 4-4 4"/><path d="M20 9H10a6 6 0 0 0 0 12h3"/></symbol>
+<symbol id="ic-zoom" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m15.5 15.5 5 5M8 10.5h5M10.5 8v5"/></symbol>
+<symbol id="ic-search" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m15.5 15.5 5 5"/></symbol>
+<symbol id="ic-bell" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9.5a6 6 0 0 1 12 0c0 5 2 6 2 6H4s2-1 2-6"/><path d="M10 19a2.2 2.2 0 0 0 4 0"/></symbol>
+<symbol id="ic-dl" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7.5 10.5 12 15l4.5-4.5"/><path d="M4 19h16"/></symbol>
+<symbol id="ic-ul" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V4M7.5 8.5 12 4l4.5 4.5"/><path d="M4 19h16"/></symbol>
+<symbol id="ic-refresh" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12a8 8 0 1 1-2.3-5.6"/><path d="M20 3.5V8h-4.5"/></symbol>
+<symbol id="ic-more" viewBox="0 0 24 24" fill="currentColor" stroke="none"><circle cx="12" cy="5" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="12" cy="19" r="1.8"/></symbol>
+<symbol id="ic-gear" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3 7.4 7.4M16.6 16.6l2.1 2.1M18.7 5.3l-2.1 2.1M7.4 16.6l-2.1 2.1"/></symbol>
+<symbol id="ic-eye" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12Z"/><circle cx="12" cy="12" r="3"/></symbol>
+<symbol id="ic-edit" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4.5L20 8.5 15.5 4 4 15.5Z"/><path d="m13.5 6 4.5 4.5"/></symbol>
+<symbol id="ic-trash" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 6.5h15M9 6.5V4.5h6v2M6.5 6.5 7.5 20h9l1-13.5"/><path d="M10 10.5v6M14 10.5v6"/></symbol>
+<symbol id="ic-time" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 7v5.5l3.5 2"/></symbol>
+<symbol id="ic-warn" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.5 22 20H2Z"/><path d="M12 9.5v5M12 17.2v.3"/></symbol>
+<symbol id="ic-ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="m8 12.5 2.8 2.8L16.5 9.5"/></symbol>
+<symbol id="ic-fail" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M9 9l6 6M15 9l-6 6"/></symbol>
+<symbol id="ic-chev-r" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 5 7 7-7 7"/></symbol>
+<symbol id="ic-chev-d" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 9 7 7 7-7"/></symbol>
+<symbol id="ic-plus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 4.5v15M4.5 12h15"/></symbol>
+<symbol id="ic-user" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4.5 20.5c1.2-3.5 4-5 7.5-5s6.3 1.5 7.5 5"/></symbol>
+<symbol id="ic-line" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19 9.5 12l4 3.5L20 6"/></symbol>
+<symbol id="ic-pie" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 3.5V12l7.5 4"/></symbol>
+<symbol id="ic-cardv" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><rect x="3.5" y="5" width="17" height="14" rx="2"/><path d="M7 15h6M7 10h4"/></symbol>
+<symbol id="ic-matrix" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3.5" y="4.5" width="17" height="15" rx="1.5"/><path d="M3.5 9.5h17M3.5 14.5h17M9.2 4.5v15M14.8 4.5v15"/></symbol>
+<symbol id="ic-table2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3.5" y="4.5" width="17" height="15" rx="1.5"/><path d="M3.5 9.5h17M15.5 4.5v15"/></symbol>
+<symbol id="ic-sliceri" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/><circle cx="9" cy="6" r="2.2" fill="#fff"/><circle cx="15" cy="12" r="2.2" fill="#fff"/><circle cx="7" cy="18" r="2.2" fill="#fff"/></symbol>
+<symbol id="ic-scatter" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 4h16v16H4Z" opacity=".35"/><circle cx="8" cy="16" r="1.6" fill="currentColor" stroke="none"/><circle cx="12" cy="10" r="1.6" fill="currentColor" stroke="none"/><circle cx="16" cy="13" r="1.6" fill="currentColor" stroke="none"/><circle cx="10" cy="7" r="1.6" fill="currentColor" stroke="none"/><circle cx="17" cy="18" r="1.6" fill="currentColor" stroke="none"/></symbol>
+</defs>
+</svg>
+
+<div class="app" id="app">
+  <header class="topbar">
+    <div class="logo"><svg class="ic" style="width:20px;height:20px;color:#60a5fa"><use href="#ic-md"/></svg>Master<b>Hub</b><span class="sub">主数据管理系统</span><span class="proto-badge">交互原型 V0.1</span></div>
+    <div class="top-search"><svg class="ic"><use href="#ic-search"/></svg><input placeholder="搜索主数据 / 模型 / 单据…（演示）"></div>
+    <div class="icon-btn" onclick="toast('演示：消息中心')"><svg class="ic"><use href="#ic-bell"/></svg><span class="dot"></span></div>
+    <div class="avatar" title="宋明 · 系统管理员">宋</div>
+  </header>
+  <div class="body">
+    <aside class="sidebar">
+      <div class="gtitle">总览</div>
+      <div class="nav-item active" data-s="home" onclick="go('home')"><svg class="ic"><use href="#ic-home"/></svg>工作台</div>
+      <div class="gtitle">数据管理</div>
+      <div class="nav-item" data-s="data" onclick="go('data')"><svg class="ic"><use href="#ic-table"/></svg>主数据维护</div>
+      <div class="nav-item" data-s="model" onclick="go('model')"><svg class="ic"><use href="#ic-model"/></svg>模型管理</div>
+      <div class="nav-item" data-s="dict" onclick="go('dict')"><svg class="ic"><use href="#ic-book"/></svg>数据标准</div>
+      <div class="gtitle">治理与集成</div>
+      <div class="nav-item" data-s="quality" onclick="go('quality')"><svg class="ic"><use href="#ic-shield"/></svg>数据质量</div>
+      <div class="nav-item" data-s="integration" onclick="go('integration')"><svg class="ic"><use href="#ic-link"/></svg>数据集成</div>
+      <div class="gtitle">流程</div>
+      <div class="nav-item" data-s="workflow" onclick="go('workflow')"><svg class="ic"><use href="#ic-flow"/></svg>数据工作流</div>
+      <div class="nav-item" data-s="approval" onclick="go('approval')"><svg class="ic"><use href="#ic-approve"/></svg>审批中心<span class="cnt">3</span></div>
+      <div class="gtitle">分析</div>
+      <div class="nav-item" data-s="dashboard" onclick="go('dashboard')"><svg class="ic"><use href="#ic-chart"/></svg>治理仪表板</div>
+      <div class="gtitle">系统</div>
+      <div class="nav-item" data-s="system" onclick="go('system')"><svg class="ic"><use href="#ic-set"/></svg>系统管理</div>
+    </aside>
+    <main class="main" id="main">
+      <section id="s-home" class="screen active">
+<div class="wrap">
+  <div class="page-head">
+    <div><h2>工作台</h2><p class="desc">主数据资产、待办事项与快捷入口总览</p></div>
+    <div class="flex"><button class="btn" onclick="toast('演示：生成并下载治理日报')"><svg class="ic"><use href="#ic-dl"/></svg>治理日报</button></div>
+  </div>
+  <div class="cards-row">
+    <div class="kpi"><div class="k-label">主数据总量</div><div class="k-num">980,370</div><div class="k-delta up">本月 +3,340（五大主数据域）</div></div>
+    <div class="kpi"><div class="k-label">待我审批</div><div class="k-num">3</div><div class="k-delta" style="color:var(--warn)">1 条即将超时（26h）</div></div>
+    <div class="kpi"><div class="k-label">数据质量评分</div><div class="k-num">94.2</div><div class="k-delta up">较上月 +0.6</div></div>
+    <div class="kpi"><div class="k-label">活跃订阅方</div><div class="k-num">5</div><div class="k-delta muted">API 拉取 2 · 推送 3</div></div>
+    <div class="kpi"><div class="k-label">今日分发量</div><div class="k-num">12,482</div><div class="k-delta up">成功率 99.2%</div></div>
+  </div>
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-head">主数据域概览<span class="link" onclick="go('data')">进入维护</span></div>
+      <table class="tbl">
+        <thead><tr><th>主数据域</th><th>数据总量</th><th>本月新增</th><th>质量评分</th><th>生命周期状态分布</th><th>最近更新</th></tr></thead>
+        <tbody>
+          <tr><td><b>物料</b></td><td class="num">520,340</td><td class="num">+2,140</td><td>95.1</td><td><span class="tag g">已发布 86%</span> <span class="tag s">其他 14%</span></td><td class="muted">11-16 08:12</td></tr>
+          <tr><td><b>客户</b></td><td class="num">310,256</td><td class="num">+862</td><td>93.4</td><td><span class="tag g">已发布 88%</span> <span class="tag s">其他 12%</span></td><td class="muted">11-16 08:30</td></tr>
+          <tr><td><b>供应商</b></td><td class="num">96,120</td><td class="num">+214</td><td>91.8</td><td><span class="tag g">已发布 84%</span> <span class="tag s">其他 16%</span></td><td class="muted">11-16 07:55</td></tr>
+          <tr><td><b>员工</b></td><td class="num">45,218</td><td class="num">+118</td><td>97.2</td><td><span class="tag g">已发布 94%</span> <span class="tag s">其他 6%</span></td><td class="muted">11-16 08:02</td></tr>
+          <tr><td><b>组织机构</b></td><td class="num">8,436</td><td class="num">+6</td><td>98.9</td><td><span class="tag g">已发布 96%</span> <span class="tag s">其他 4%</span></td><td class="muted">11-15 19:20</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="card">
+      <div class="card-head">我的待办<span class="tag r">3</span></div>
+      <div class="card-body" style="padding-top:6px">
+        <div class="todo-item" onclick="go('approval')">
+          <span class="ap-ico b"><svg class="ic"><use href="#ic-md"/></svg></span>
+          <div style="flex:1;min-width:0"><div class="t-title">物料新增 · 不锈钢轴承 6204-2Z</div><div class="t-meta">张伟 · 制造部 · 部门初审 · 等待 2.5h</div></div>
+          <svg class="ic muted"><use href="#ic-chev-r"/></svg>
+        </div>
+        <div class="todo-item" onclick="go('approval')">
+          <span class="ap-ico o"><svg class="ic"><use href="#ic-edit"/></svg></span>
+          <div style="flex:1;min-width:0"><div class="t-title">客户变更 · 上海临港新能源（银行账号）</div><div class="t-meta">王芳 · 销售部 · 治理岗复审 · <span class="overtime">等待 26h 超时</span></div></div>
+          <svg class="ic muted"><use href="#ic-chev-r"/></svg>
+        </div>
+        <div class="todo-item" onclick="go('approval')">
+          <span class="ap-ico p"><svg class="ic"><use href="#ic-plus"/></svg></span>
+          <div style="flex:1;min-width:0"><div class="t-title">供应商新增 · 江苏恒力传动科技有限公司</div><div class="t-meta">李娜 · 采购部 · 治理岗复审 · 等待 5h</div></div>
+          <svg class="ic muted"><use href="#ic-chev-r"/></svg>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="card mt14">
+    <div class="card-head">快捷入口</div>
+    <div class="card-body flex" style="gap:10px;flex-wrap:wrap">
+      <button class="btn" onclick="openLayer('dw-add')"><svg class="ic"><use href="#ic-plus"/></svg>发起物料申请</button>
+      <button class="btn" onclick="go('workflow')"><svg class="ic"><use href="#ic-flow"/></svg>数据清洗工作流</button>
+      <button class="btn" onclick="go('quality')"><svg class="ic"><use href="#ic-shield"/></svg>质量报告</button>
+      <button class="btn" onclick="go('integration')"><svg class="ic"><use href="#ic-refresh"/></svg>分发对账</button>
+      <button class="btn" onclick="go('dashboard')"><svg class="ic"><use href="#ic-chart"/></svg>治理仪表板</button>
+    </div>
+  </div>
+</div>
+</section>
+      <section id="s-data" class="screen">
+<div class="wrap">
+  <div class="page-head">
+    <div><h2>主数据维护</h2><p class="desc">物料 / 客户 / 供应商主数据的查询、新增、批量导入与全生命周期管理（设计文档 3.2）</p></div>
+    <div class="flex">
+      <button class="btn" onclick="openLayer('md-import')"><svg class="ic"><use href="#ic-ul"/></svg>批量导入</button>
+      <button class="btn" onclick="toast('已按当前筛选条件导出 Excel（演示）')"><svg class="ic"><use href="#ic-dl"/></svg>导出</button>
+      <button class="btn primary" onclick="openLayer('dw-add')"><svg class="ic"><use href="#ic-plus"/></svg>新增</button>
+    </div>
+  </div>
+  <div class="tabs" id="dm-tabs">
+    <div class="tab active" data-k="material" onclick="renderDom('material')">物料主数据 <span class="muted">520,340</span></div>
+    <div class="tab" data-k="customer" onclick="renderDom('customer')">客户主数据 <span class="muted">310,256</span></div>
+    <div class="tab" data-k="supplier" onclick="renderDom('supplier')">供应商主数据 <span class="muted">96,120</span></div>
+  </div>
+  <div class="card">
+    <div style="padding:12px 14px;border-bottom:1px solid var(--bd)">
+      <div class="fbar" style="margin:0">
+        <div class="f-item"><svg class="ic muted"><use href="#ic-search"/></svg><input placeholder="编码 / 名称 / 规格模糊搜索" style="width:230px"></div>
+        <div class="f-item"><label>状态</label><select><option>全部</option><option>已发布</option><option>待审核</option><option>变更中</option><option>已冻结</option><option>已归档</option></select></div>
+        <div class="f-item"><label>分类</label><select><option>全部分类</option><option>原材料</option><option>标准件</option><option>轴承件</option><option>电气件</option></select></div>
+        <div class="f-item"><label>更新时间</label><select><option>全部</option><option>近 7 天</option><option>近 30 天</option></select></div>
+        <button class="btn sm primary" onclick="toast('演示：按条件查询')">查询</button>
+        <button class="btn sm" onclick="toast('已重置筛选条件')">重置</button>
+        <span class="muted fr">已选 0 项　<span class="link" onclick="toast('演示：批量冻结所选记录')">批量冻结</span> · <span class="link" onclick="toast('演示：批量归档所选记录')">批量归档</span></span>
+      </div>
+    </div>
+    <div style="overflow:auto"><table class="tbl"><thead id="dm-thead"></thead><tbody id="dm-tbody"></tbody></table></div>
+    <div style="padding:10px 14px;border-top:1px solid var(--bd)"><div class="pgn"><span style="margin-right:auto">共 <b id="dm-total">520,340</b> 条 · 每页 10 条</span><button>‹</button><button class="cur">1</button><button onclick="toast('演示：翻页')">2</button><button onclick="toast('演示：翻页')">3</button><button>…</button><button onclick="toast('演示：翻页')">›</button></div></div>
+  </div>
+</div>
+
+<div class="layer" id="dw-add">
+  <div class="l-mask" onclick="closeLayer('dw-add')"></div>
+  <div class="drawer">
+    <div class="d-title">新增 · 物料主数据申请<span class="x" onclick="closeLayer('dw-add')">×</span></div>
+    <div class="d-body">
+      <div class="form-item"><label>提交后流程</label><span class="hint">自动查重 → 部门初审 → 数据治理岗复审 → 自动编码并发布</span></div>
+      <div class="grid-form">
+        <div class="form-item req"><label>物料分类</label><select><option>请选择分类</option><option>轴承件 / 球轴承</option><option>紧固件 / 螺栓</option><option>原材料 / 板材</option><option>电气件 / 传感器</option></select></div>
+        <div class="form-item req"><label>计量单位</label><select><option>请选择（标准码表）</option><option>个 (EA)</option><option>套 (SET)</option><option>千克 (kg)</option><option>台</option><option>米 (m)</option></select></div>
+      </div>
+      <div class="form-item req"><label>物料名称</label><input type="text" placeholder="如：深沟球轴承 6204-2Z"></div>
+      <div class="form-item"><label>规格型号</label><input type="text" placeholder="如：20×47×14 / GB/T 276"></div>
+      <div class="form-item req"><label>物料属性</label>
+        <div class="radio-row"><label><input type="radio" name="mattr" checked> 外购</label><label><input type="radio" name="mattr"> 自制</label><label><input type="radio" name="mattr"> 外协</label></div>
+      </div>
+      <div class="form-item"><label>备注</label><textarea rows="3" placeholder="用途、替代料等补充说明"></textarea></div>
+      <div class="hint"><svg class="ic" style="color:var(--warn)"><use href="#ic-warn"/></svg> 编码由编码引擎按规则 <b>WL + 日期 + 4位流水</b> 在审批通过后自动生成</div>
+    </div>
+    <div class="d-foot">
+      <button class="btn" onclick="toast('已保存草稿（演示）')">存草稿</button>
+      <button class="btn primary" onclick="dmSubmit()">提交申请</button>
+    </div>
+  </div>
+</div>
+
+<div class="layer" id="dw-his">
+  <div class="l-mask" onclick="closeLayer('dw-his')"></div>
+  <div class="drawer w560">
+    <div class="d-title">变更历史 · WL20260102-0001 六角螺栓 M8×30<span class="x" onclick="closeLayer('dw-his')">×</span></div>
+    <div class="d-body">
+      <div class="flex" style="align-items:flex-start;gap:16px">
+        <div style="width:200px;flex:none">
+          <div class="hint" style="margin-bottom:8px">版本记录</div>
+          <div class="tl">
+            <div class="tl-item cur"><b>V3（当前）</b><div class="hint">2026-11-02 · 张伟 · 变更审批通过</div></div>
+            <div class="tl-item"><b>V2</b><div class="hint">2026-06-18 · 王强 · 标准号修订</div></div>
+            <div class="tl-item"><b>V1</b><div class="hint">2026-01-02 · 张伟 · 初始发布</div></div>
+          </div>
+        </div>
+        <div style="flex:1;min-width:0">
+          <div class="hint" style="margin-bottom:8px">V2 → V3 字段级差异</div>
+          <table class="tbl diff">
+            <thead><tr><th>字段</th><th>旧值（V2）</th><th>新值（V3）</th></tr></thead>
+            <tbody>
+              <tr><td>规格型号</td><td class="old">GB/T 5782</td><td class="new">GB/T 5783</td></tr>
+              <tr><td>计量单位</td><td class="old">只</td><td class="new">个 (EA)</td></tr>
+              <tr><td>备注</td><td class="old">（空）</td><td class="new">GB/T 5783 为全螺纹标准，替代 5782</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    <div class="d-foot">
+      <button class="btn danger" onclick="toast('演示：回滚将发起新的变更审批单')">回滚到 V2</button>
+      <button class="btn primary" onclick="closeLayer('dw-his')">关闭</button>
+    </div>
+  </div>
+</div>
+
+<div class="layer" id="md-dup">
+  <div class="l-mask" onclick="closeLayer('md-dup')"></div>
+  <div class="modal-center"><div class="m-box" style="width:600px">
+    <div class="m-title">查重提示 · 检测到 2 条疑似重复记录<span class="x" style="cursor:pointer;color:var(--mut)" onclick="closeLayer('md-dup')">×</span></div>
+    <div class="m-body">
+      <div class="card" style="margin-bottom:10px"><div class="card-body flex">
+        <span class="tag r" style="height:fit-content">相似度 96%</span>
+        <div style="flex:1"><b>WL20251120-0132 · 不锈钢内六角螺栓 M8×30</b><div class="hint">紧固件/螺栓 · 2025-11-20 发布 · 已被 3 个下游系统引用</div></div>
+        <button class="btn sm" onclick="toast('已打开合并向导：选择金数据 → 字段级取舍 → 引用迁移（原型演示）')">查看并合并</button>
+      </div></div>
+      <div class="card" style="margin-bottom:10px"><div class="card-body flex">
+        <span class="tag o" style="height:fit-content">相似度 84%</span>
+        <div style="flex:1"><b>WL20251008-0011 · 六角螺栓 M8×35</b><div class="hint">紧固件/螺栓 · 规格长度不同，可能为相似料</div></div>
+        <button class="btn sm" onclick="toast('已打开合并向导（原型演示）')">查看并合并</button>
+      </div></div>
+      <div class="hint"><svg class="ic" style="color:var(--info,#0284c7)"><use href="#ic-browse"/></svg> 查重规则：物料名称+规格 精确匹配；名称模糊匹配相似度 ≥ 85% 告警（规则可配置）</div>
+    </div>
+    <div class="m-foot">
+      <button class="btn" onclick="closeLayer('md-dup')">取消申请</button>
+      <button class="btn" onclick="dmForce()">仍要提交申请</button>
+      <button class="btn primary" onclick="toast('已打开合并向导（原型演示）')">合并到已有记录</button>
+    </div>
+  </div></div>
+</div>
+
+<div class="layer" id="md-import">
+  <div class="l-mask" onclick="closeLayer('md-import')"></div>
+  <div class="modal-center"><div class="m-box w840">
+    <div class="m-title">批量导入 · 物料主数据<span class="x" style="cursor:pointer;color:var(--mut)" onclick="closeLayer('md-import')">×</span></div>
+    <div class="m-body">
+      <div class="steps" id="wz-steps">
+        <div class="step on"><i>1</i>下载模板</div>
+        <div class="step"><i>2</i>上传与预览</div>
+        <div class="step"><i>3</i>校验与导入</div>
+      </div>
+      <div class="wz-pane show" data-p="1">
+        <div class="card"><div class="card-body flex">
+          <svg class="ic" style="width:30px;height:30px;color:var(--ok)"><use href="#ic-excel"/></svg>
+          <div style="flex:1"><b>物料主数据导入模板 V1.3.xlsx</b><div class="hint">含分类、计量单位码值说明；红色列为必填字段</div></div>
+          <button class="btn primary sm" onclick="toast('模板已下载（演示）')"><svg class="ic"><use href="#ic-dl"/></svg>下载模板</button>
+        </div></div>
+        <div class="hint mt10">导入将逐行执行：字段格式校验 → 码值校验 → 查重 → 通过后进入批量审批</div>
+      </div>
+      <div class="wz-pane" data-p="2">
+        <div class="dropzone" onclick="toast('演示：选择文件 物料存量_20261116.xlsx')">
+          <svg class="ic" style="width:26px;height:26px"><use href="#ic-ul"/></svg>
+          <div>点击或拖拽上传 Excel / CSV 文件</div>
+        </div>
+        <div class="card mt14"><div class="card-body flex">
+          <svg class="ic" style="width:26px;height:26px;color:var(--ok)"><use href="#ic-excel"/></svg>
+          <div style="flex:1"><b>物料存量_20261116.xlsx</b><div class="hint">2.4 MB · 10,000 行 · 已解析列映射 12/12</div></div>
+          <span class="tag g">解析成功</span>
+        </div></div>
+        <div class="hint mt10">已按模型字段自动映射，可在下一步校验结果中查看异常行</div>
+      </div>
+      <div class="wz-pane" data-p="3">
+        <div class="cards-row" style="margin-bottom:10px">
+          <div class="kpi"><div class="k-label">校验通过</div><div class="k-num" style="color:var(--ok)">9,876</div></div>
+          <div class="kpi"><div class="k-label">校验失败</div><div class="k-num" style="color:var(--err)">124</div></div>
+          <div class="kpi"><div class="k-label">疑似重复（需人工确认）</div><div class="k-num" style="color:var(--warn)">47</div></div>
+        </div>
+        <table class="tbl">
+          <thead><tr><th>行号</th><th>字段</th><th>错误原因</th><th>原始值</th></tr></thead>
+          <tbody>
+            <tr><td>128</td><td>计量单位</td><td class="r" style="color:var(--err)">码值不存在</td><td>“PCS”</td></tr>
+            <tr><td>356</td><td>物料分类</td><td style="color:var(--err)">必填字段为空</td><td>—</td></tr>
+            <tr><td>1,204</td><td>物料名称</td><td style="color:var(--err)">超过最大长度 60</td><td>（72 字符）</td></tr>
+          </tbody>
+        </table>
+        <div id="wz-run" style="display:none;margin-top:14px">
+          <div class="flex" style="justify-content:space-between"><span class="hint">正在导入…</span><span class="hint" id="wz-pct">0%</span></div>
+          <div class="progress mt10"><i id="wz-bar"></i></div>
+        </div>
+      </div>
+    </div>
+    <div class="m-foot">
+      <button class="btn" id="wz-prev" onclick="wzGo(1)">上一步</button>
+      <button class="btn" id="wz-next" onclick="wzGo(2)">下一步</button>
+      <button class="btn" id="wz-dl" onclick="toast('错误行清单已下载（演示）')">下载错误行</button>
+      <button class="btn primary" id="wz-imp" onclick="wzImport()">导入通过的数据</button>
+    </div>
+  </div></div>
+</div>
+</section>
+      <section id="s-model" class="screen">
+<div class="wrap">
+  <div class="page-head">
+    <div><h2>模型管理</h2><p class="desc">主数据域元模型配置中心：字段定义、编码规则、版本管理，新域零编码上线（设计文档 3.1）</p></div>
+    <div class="flex"><button class="btn primary" onclick="toast('演示：新建主数据模型向导（空白/复制现有）')"><svg class="ic"><use href="#ic-plus"/></svg>新建模型</button></div>
+  </div>
+  <div style="display:grid;grid-template-columns:250px 1fr;gap:12px;align-items:start">
+    <div class="card">
+      <div class="card-head">主数据模型</div>
+      <div class="card-body" style="padding:8px">
+        <div class="flex" style="padding:9px 8px;border-radius:8px;background:var(--pl);cursor:pointer"><svg class="ic" style="color:var(--pd)"><use href="#ic-md"/></svg><div style="flex:1"><b style="font-size:12.5px">物料主数据</b><div class="hint" style="font-size:11px">18 个字段 · V1.2</div></div><span class="tag g">已发布</span></div>
+        <div class="flex" style="padding:9px 8px;border-radius:8px;cursor:pointer"><svg class="ic muted"><use href="#ic-user"/></svg><div style="flex:1"><b style="font-size:12.5px">客户主数据</b><div class="hint" style="font-size:11px">15 个字段 · V1.0</div></div><span class="tag g">已发布</span></div>
+        <div class="flex" style="padding:9px 8px;border-radius:8px;cursor:pointer"><svg class="ic muted"><use href="#ic-link"/></svg><div style="flex:1"><b style="font-size:12.5px">供应商主数据</b><div class="hint" style="font-size:11px">16 个字段 · V0.9</div></div><span class="tag o">草稿</span></div>
+        <div class="flex" style="padding:9px 8px;border-radius:8px;cursor:pointer"><svg class="ic muted"><use href="#ic-model"/></svg><div style="flex:1"><b style="font-size:12.5px">组织机构主数据</b><div class="hint" style="font-size:11px">层级模型 · 9 个字段</div></div><span class="tag g">已发布</span></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="tabs" style="margin:0;padding:0 12px" data-panes="#md-panes">
+        <div class="tab active" data-p="f">字段定义</div>
+        <div class="tab" data-p="c">编码规则</div>
+        <div class="tab" data-p="v">版本历史</div>
+      </div>
+      <div id="md-panes">
+        <div class="tab-pane show" data-p="f">
+          <div style="padding:12px 14px" class="flex"><span class="hint">模型：物料主数据 V1.2（已发布）· 修改字段需走模型变更审批，系统自动评估存量数据兼容性</span><button class="btn sm primary fr" onclick="toast('演示：新增字段（草稿态，发布后生效）')"><svg class="ic"><use href="#ic-plus"/></svg>新增字段</button></div>
+          <table class="tbl">
+            <thead><tr><th>字段名</th><th>显示名</th><th>类型</th><th>必填</th><th>唯一</th><th>引用 / 码表</th><th>操作</th></tr></thead>
+            <tbody>
+              <tr><td class="muted">material_code</td><td><b>物料编码</b></td><td><span class="tag b">系统生成</span></td><td>—</td><td>是</td><td class="muted">编码引擎</td><td class="muted">锁定</td></tr>
+              <tr><td>material_name</td><td><b>物料名称</b></td><td>文本(60)</td><td>是</td><td>否</td><td class="muted">—</td><td><span class="link" onclick="toast('演示：编辑字段属性')">编辑</span></td></tr>
+              <tr><td>spec</td><td>规格型号</td><td>文本(120)</td><td>否</td><td>否</td><td class="muted">—</td><td><span class="link" onclick="toast('演示：编辑字段属性')">编辑</span></td></tr>
+              <tr><td>category</td><td><b>物料分类</b></td><td><span class="tag b">引用</span></td><td>是</td><td>否</td><td>物料分类树（层级）</td><td><span class="link" onclick="toast('演示：编辑字段属性')">编辑</span></td></tr>
+              <tr><td>unit</td><td><b>计量单位</b></td><td><span class="tag p">枚举</span></td><td>是</td><td>否</td><td>码表：计量单位</td><td><span class="link" onclick="toast('演示：编辑字段属性')">编辑</span></td></tr>
+              <tr><td>attr</td><td>物料属性</td><td><span class="tag p">枚举</span></td><td>是</td><td>否</td><td>码表：物料属性</td><td><span class="link" onclick="toast('演示：编辑字段属性')">编辑</span></td></tr>
+              <tr><td>shelf_life</td><td>保质期（天）</td><td>整数</td><td>否</td><td>否</td><td class="muted">值域 0-3650</td><td><span class="link" onclick="toast('演示：编辑字段属性')">编辑</span></td></tr>
+              <tr><td class="muted">status / created_by / …</td><td class="muted">系统字段</td><td class="muted">—</td><td class="muted">—</td><td class="muted">—</td><td class="muted">生命周期 / 审计</td><td class="muted">锁定</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="tab-pane" data-p="c">
+          <div class="card-body">
+            <div class="pp-sec" style="margin-top:0">规则段组合（可增删段、调整顺序）</div>
+            <div class="flex" style="gap:8px;flex-wrap:wrap">
+              <span class="dchip" style="padding:6px 14px"><b>固定字符</b>　WL</span>
+              <span class="muted">+</span>
+              <span class="dchip" style="padding:6px 14px"><b>日期</b>　yyyyMMdd</span>
+              <span class="muted">+</span>
+              <span class="dchip" style="padding:6px 14px"><b>连接符</b>　-</span>
+              <span class="muted">+</span>
+              <span class="dchip" style="padding:6px 14px"><b>流水号</b>　4 位 · 按日重置</span>
+              <button class="btn sm" onclick="toast('演示：添加规则段')">+ 添加段</button>
+            </div>
+            <div class="pp-sec">实时预览</div>
+            <div class="card" style="background:#0f172a;color:#e2e8f0;font-family:Menlo,Consolas,monospace;font-size:20px;padding:16px 20px;border-radius:8px;border:none">WL<b style="color:#60a5fa">20261116</b>-<b style="color:#fbbf24">0001</b>　<span style="font-size:12px;color:#94a3b8">下一个：…-0002</span></div>
+            <div class="hint mt10"><svg class="ic" style="color:var(--warn)"><use href="#ic-warn"/></svg> 修改编码规则仅对之后新增的数据生效，存量编码保持不变</div>
+            <div class="mt14"><button class="btn primary" onclick="toast('编码规则已保存（演示）')">保存规则</button></div>
+          </div>
+        </div>
+        <div class="tab-pane" data-p="v">
+          <table class="tbl">
+            <thead><tr><th>版本</th><th>变更说明</th><th>发布时间</th><th>发布人</th><th>状态</th><th>操作</th></tr></thead>
+            <tbody>
+              <tr><td><b>V1.2</b></td><td>新增字段「保质期（天）」；计量单位改挂标准码表</td><td>2026-11-02 10:30</td><td>宋明</td><td><span class="tag g">已发布</span></td><td class="muted">当前版本</td></tr>
+              <tr><td>V1.1</td><td>物料名称长度 40 → 60</td><td>2026-06-18 15:02</td><td>宋明</td><td><span class="tag s">历史</span></td><td><span class="link" onclick="toast('演示：打开版本差异对比')">对比</span></td></tr>
+              <tr><td>V1.0</td><td>初始版本发布</td><td>2026-01-02 09:00</td><td>宋明</td><td><span class="tag s">历史</span></td><td><span class="link" onclick="toast('演示：打开版本差异对比')">对比</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</section>
+
+<section id="s-dict" class="screen">
+<div class="wrap">
+  <div class="page-head">
+    <div><h2>数据标准</h2><p class="desc">码表（数据字典）与标准映射管理，为模型、质量校验与集成清洗提供统一码值（设计文档 3.3）</p></div>
+    <div class="flex"><button class="btn primary" onclick="toast('演示：新建码表（平铺 / 树形）')"><svg class="ic"><use href="#ic-plus"/></svg>新建码表</button></div>
+  </div>
+  <div style="display:grid;grid-template-columns:250px 1fr;gap:12px;align-items:start">
+    <div class="card">
+      <div class="card-head">码表清单</div>
+      <div class="card-body" style="padding:8px">
+        <div class="flex" style="padding:8px;border-radius:8px;cursor:pointer"><svg class="ic muted"><use href="#ic-book"/></svg><div style="flex:1">国家地区</div><span class="hint">249</span></div>
+        <div class="flex" style="padding:8px;border-radius:8px;cursor:pointer"><svg class="ic muted"><use href="#ic-book"/></svg><div style="flex:1">币种</div><span class="hint">26</span></div>
+        <div class="flex" style="padding:8px;border-radius:8px;background:var(--pl);cursor:pointer"><svg class="ic" style="color:var(--pd)"><use href="#ic-book"/></svg><div style="flex:1"><b>计量单位</b></div><span class="hint">18</span></div>
+        <div class="flex" style="padding:8px;border-radius:8px;cursor:pointer"><svg class="ic muted"><use href="#ic-book"/></svg><div style="flex:1">行业分类（树形）</div><span class="hint">4 级</span></div>
+        <div class="flex" style="padding:8px;border-radius:8px;cursor:pointer"><svg class="ic muted"><use href="#ic-book"/></svg><div style="flex:1">物料属性</div><span class="hint">3</span></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-head">计量单位 · 标准码表<span class="flex" style="gap:8px"><button class="btn sm" onclick="toast('演示：导出码表')"><svg class="ic"><use href="#ic-dl"/></svg>导出</button><button class="btn sm primary" onclick="toast('演示：新增码值')"><svg class="ic"><use href="#ic-plus"/></svg>新增码值</button></span></div>
+      <table class="tbl">
+        <thead><tr><th>码值</th><th>名称</th><th>符号</th><th>基准单位</th><th>换算率</th><th>状态</th><th>操作</th></tr></thead>
+        <tbody>
+          <tr><td><b>EA</b></td><td>个</td><td>个</td><td>个</td><td class="num">1</td><td><span class="tag g">启用</span></td><td><span class="link" onclick="toast('演示：编辑码值')">编辑</span></td></tr>
+          <tr><td><b>SET</b></td><td>套</td><td>套</td><td>个</td><td class="num">—</td><td><span class="tag g">启用</span></td><td><span class="link" onclick="toast('演示：编辑码值')">编辑</span></td></tr>
+          <tr><td><b>KG</b></td><td>千克</td><td>kg</td><td>千克</td><td class="num">1</td><td><span class="tag g">启用</span></td><td><span class="link" onclick="toast('演示：编辑码值')">编辑</span></td></tr>
+          <tr><td><b>T</b></td><td>吨</td><td>t</td><td>千克</td><td class="num">1,000</td><td><span class="tag g">启用</span></td><td><span class="link" onclick="toast('演示：编辑码值')">编辑</span></td></tr>
+          <tr><td><b>M</b></td><td>米</td><td>m</td><td>米</td><td class="num">1</td><td><span class="tag g">启用</span></td><td><span class="link" onclick="toast('演示：编辑码值')">编辑</span></td></tr>
+          <tr><td><b>PC</b></td><td>件</td><td>件</td><td>个</td><td class="num">1</td><td><span class="tag s">停用</span></td><td><span class="link" onclick="toast('演示：编辑码值')">编辑</span></td></tr>
+        </tbody>
+      </table>
+      <div style="padding:12px 16px;border-top:1px solid var(--bd)" class="hint">
+        <svg class="ic"><use href="#ic-link"/></svg> 被引用于：物料.计量单位、供应商.结算单位 · 停用码值前系统将检测存量引用并拦截
+      </div>
+    </div>
+  </div>
+</div>
+</section>
+      <section id="s-quality" class="screen">
+<div class="wrap">
+  <div class="page-head">
+    <div><h2>数据质量</h2><p class="desc">五维质量规则（完整/唯一/合法/一致/及时）、评分与问题闭环（设计文档 3.4）</p></div>
+    <div class="flex"><button class="btn primary" onclick="toast('质量检查任务已触发：物料 / 客户 / 供应商（演示）')"><svg class="ic"><use href="#ic-play"/></svg>立即检查</button></div>
+  </div>
+  <div class="tabs" data-panes="#q-panes">
+    <div class="tab active" data-p="r">质量报告</div>
+    <div class="tab" data-p="rule">质量规则</div>
+    <div class="tab" data-p="task">质量任务</div>
+  </div>
+  <div id="q-panes">
+    <div class="tab-pane show" data-p="r">
+      <div class="cards-row">
+        <div class="kpi" style="border-left:3px solid var(--p)"><div class="k-label">综合评分</div><div class="k-num">94.2</div><div class="k-delta up">较上月 +0.6</div></div>
+        <div class="kpi"><div class="k-label">完整性</div><div class="k-num">98.1</div><div class="k-delta muted">空值 128 处</div></div>
+        <div class="kpi"><div class="k-label">唯一性</div><div class="k-num">99.4</div><div class="k-delta muted">疑似重复 36 条</div></div>
+        <div class="kpi"><div class="k-label">合法性</div><div class="k-num">92.8</div><div class="k-delta muted">格式错误 12 条</div></div>
+        <div class="kpi"><div class="k-label">一致性</div><div class="k-num">96.5</div><div class="k-delta muted">逻辑冲突 5 条</div></div>
+        <div class="kpi"><div class="k-label">及时性</div><div class="k-num">89.0</div><div class="k-delta down">证照过期 23 条</div></div>
+      </div>
+      <div class="grid-2">
+        <div class="card"><div class="card-head">近 30 天质量评分趋势</div><div class="card-body" id="q-trend"></div></div>
+        <div class="card"><div class="card-head">问题按维度分布</div><div class="card-body" id="q-dim"></div></div>
+      </div>
+      <div class="card mt14">
+        <div class="card-head">问题清单<span class="hint">共 204 条 · 待整改 172</span></div>
+        <table class="tbl">
+          <thead><tr><th>发现时间</th><th>主数据域</th><th>维度</th><th>问题描述</th><th>影响记录数</th><th>严重度</th><th>状态</th><th>操作</th></tr></thead>
+          <tbody>
+            <tr><td class="muted">11-16 02:00</td><td>物料</td><td><span class="tag b">完整性</span></td><td>计量单位为空</td><td class="num">128</td><td><span class="tag r">高</span></td><td><span class="tag o">待整改</span></td><td><span class="link" onclick="openLayer('dw-issue')">下钻</span></td></tr>
+            <tr><td class="muted">11-16 02:00</td><td>客户</td><td><span class="tag p">唯一性</span></td><td>疑似重复客户（名称相似度 ≥ 85%）</td><td class="num">36</td><td><span class="tag o">中</span></td><td><span class="tag o">待整改</span></td><td><span class="link" onclick="openLayer('dw-issue')">下钻</span></td></tr>
+            <tr><td class="muted">11-16 02:00</td><td>供应商</td><td><span class="tag b">合法性</span></td><td>统一社会信用代码格式错误</td><td class="num">12</td><td><span class="tag r">高</span></td><td><span class="tag b">整改中</span></td><td><span class="link" onclick="openLayer('dw-issue')">下钻</span></td></tr>
+            <tr><td class="muted">11-15 02:00</td><td>供应商</td><td><span class="tag s">及时性</span></td><td>资质证照已过期未更新</td><td class="num">23</td><td><span class="tag o">中</span></td><td><span class="tag o">待整改</span></td><td><span class="link" onclick="openLayer('dw-issue')">下钻</span></td></tr>
+            <tr><td class="muted">11-14 02:00</td><td>物料</td><td><span class="tag g">一致性</span></td><td>有效期止早于有效期起</td><td class="num">5</td><td><span class="tag s">低</span></td><td><span class="tag g">已闭环</span></td><td><span class="link" onclick="openLayer('dw-issue')">下钻</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="tab-pane" data-p="rule">
+      <div class="card">
+        <div class="card-head">质量规则库<span><button class="btn sm primary" onclick="toast('演示：新建规则（可视化条件配置）')"><svg class="ic"><use href="#ic-plus"/></svg>新建规则</button></span></div>
+        <table class="tbl">
+          <thead><tr><th>规则名称</th><th>主数据域</th><th>维度</th><th>校验对象 / 表达式</th><th>严重级别</th><th>最近执行</th><th>通过率</th><th>操作</th></tr></thead>
+          <tbody>
+            <tr><td><b>物料-单位必填</b></td><td>物料</td><td><span class="tag b">完整性</span></td><td class="muted">unit IS NOT NULL</td><td><span class="tag r">高</span></td><td class="muted">11-16 02:00</td><td class="num">99.98%</td><td><span class="link" onclick="toast('演示：编辑规则')">编辑</span><span class="link" onclick="toast('演示：立即执行')">执行</span></td></tr>
+            <tr><td><b>物料-编码唯一</b></td><td>物料</td><td><span class="tag p">唯一性</span></td><td class="muted">COUNT(material_code) GROUP BY = 1</td><td><span class="tag r">高</span></td><td class="muted">11-16 02:00</td><td class="num">100%</td><td><span class="link" onclick="toast('演示：编辑规则')">编辑</span><span class="link" onclick="toast('演示：立即执行')">执行</span></td></tr>
+            <tr><td><b>客户-名称查重</b></td><td>客户</td><td><span class="tag p">唯一性</span></td><td class="muted">similarity(name) ≥ 0.85</td><td><span class="tag o">中</span></td><td class="muted">11-16 02:00</td><td class="num">99.99%</td><td><span class="link" onclick="toast('演示：编辑规则')">编辑</span><span class="link" onclick="toast('演示：立即执行')">执行</span></td></tr>
+            <tr><td><b>供应商-信用代码格式</b></td><td>供应商</td><td><span class="tag b">合法性</span></td><td class="muted">REGEXP ^[0-9A-HJ-NPQRTUWXY]{2}\d{6}…$</td><td><span class="tag r">高</span></td><td class="muted">11-16 02:00</td><td class="num">99.99%</td><td><span class="link" onclick="toast('演示：编辑规则')">编辑</span><span class="link" onclick="toast('演示：立即执行')">执行</span></td></tr>
+            <tr><td><b>供应商-证照时效</b></td><td>供应商</td><td><span class="tag s">及时性</span></td><td class="muted">license_expiry ≥ TODAY</td><td><span class="tag o">中</span></td><td class="muted">11-16 02:00</td><td class="num">99.97%</td><td><span class="link" onclick="toast('演示：编辑规则')">编辑</span><span class="link" onclick="toast('演示：立即执行')">执行</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="tab-pane" data-p="task">
+      <div class="card">
+        <div class="card-head">质量检查任务<span><button class="btn sm primary" onclick="toast('演示：新建定时任务')"><svg class="ic"><use href="#ic-plus"/></svg>新建任务</button></span></div>
+        <table class="tbl">
+          <thead><tr><th>任务名称</th><th>检查范围</th><th>调度</th><th>上次执行</th><th>结果</th><th>启用</th><th>操作</th></tr></thead>
+          <tbody>
+            <tr><td><b>全域质量日检</b></td><td>物料 / 客户 / 供应商</td><td class="muted">每日 02:00</td><td class="muted">11-16 02:00 · 6 分 12 秒</td><td><span class="tag g">完成 · 204 问题</span></td><td><span class="sw on" onclick="sw(this)"></span></td><td><span class="link" onclick="toast('演示：立即执行')">立即执行</span></td></tr>
+            <tr><td><b>供应商证照周检</b></td><td>供应商</td><td class="muted">每周一 03:00</td><td class="muted">11-16 03:00 · 52 秒</td><td><span class="tag g">完成 · 23 问题</span></td><td><span class="sw on" onclick="sw(this)"></span></td><td><span class="link" onclick="toast('演示：立即执行')">立即执行</span></td></tr>
+            <tr><td><b>新发数据实时校验</b></td><td>全部新增/变更</td><td class="muted">实时触发</td><td class="muted">11-16 08:30</td><td><span class="tag g">运行中</span></td><td><span class="sw on" onclick="sw(this)"></span></td><td class="muted">—</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="layer" id="dw-issue">
+  <div class="l-mask" onclick="closeLayer('dw-issue')"></div>
+  <div class="drawer w560">
+    <div class="d-title">问题下钻 · 物料 / 计量单位为空<span class="x" onclick="closeLayer('dw-issue')">×</span></div>
+    <div class="d-body">
+      <div class="card" style="margin-bottom:12px"><div class="card-body">
+        <div class="kv"><b>规则</b><span>物料-单位必填（完整性 / 高）</span></div>
+        <div class="kv"><b>影响记录</b><span>128 条</span></div>
+        <div class="kv"><b>主要来源</b><span>2026-03 存量导入批次（98 条）</span></div>
+      </div></div>
+      <table class="tbl">
+        <thead><tr><th>物料编码</th><th>物料名称</th><th>分类</th><th>创建人</th></tr></thead>
+        <tbody>
+          <tr><td>WL20260312-0004</td><td>尼龙棒 PA66 Φ60</td><td class="muted">原材料/棒材</td><td class="muted">张伟</td></tr>
+          <tr><td>WL20260312-0011</td><td>铜排 TMY 40×4</td><td class="muted">电气件/导电</td><td class="muted">张伟</td></tr>
+          <tr><td>WL20260315-0002</td><td>橡胶垫片 Φ35×Φ20×3</td><td class="muted">标准件/密封件</td><td class="muted">李娜</td></tr>
+          <tr><td>WL20260318-0007</td><td>绝缘子 EP-12</td><td class="muted">电气件/绝缘</td><td class="muted">张伟</td></tr>
+          <tr><td>WL20260401-0003</td><td>过滤器滤芯 GL-40</td><td class="muted">液压件/滤芯</td><td class="muted">王强</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="d-foot">
+      <button class="btn" onclick="toast('问题清单已导出（演示）')"><svg class="ic"><use href="#ic-dl"/></svg>导出清单</button>
+      <button class="btn primary" onclick="toast('已生成整改任务并指派责任人（演示）')">生成整改任务</button>
+    </div>
+  </div>
+</div>
+</section>
+
+<section id="s-integration" class="screen">
+<div class="wrap">
+  <div class="page-head">
+    <div><h2>数据集成</h2><p class="desc">源系统采集接入、下游订阅分发与对账监控（设计文档 3.5）</p></div>
+    <div class="flex"><button class="btn primary" onclick="toast('演示：注册源系统（连接测试 → 域映射）')"><svg class="ic"><use href="#ic-plus"/></svg>注册源系统</button></div>
+  </div>
+  <div class="tabs" data-panes="#ig-panes">
+    <div class="tab active" data-p="sub">订阅分发</div>
+    <div class="tab" data-p="src">源系统接入</div>
+    <div class="tab" data-p="log">分发日志</div>
+  </div>
+  <div id="ig-panes">
+    <div class="tab-pane show" data-p="sub">
+      <div class="cards-row">
+        <div class="kpi"><div class="k-label">订阅方</div><div class="k-num">5</div><div class="k-delta muted">拉取 2 · 推送 3</div></div>
+        <div class="kpi"><div class="k-label">今日推送事件</div><div class="k-num">12,482</div><div class="k-delta muted">均值 520/小时</div></div>
+        <div class="kpi"><div class="k-label">推送成功率</div><div class="k-num">99.2%</div><div class="k-delta up">本周 +0.3%</div></div>
+        <div class="kpi"><div class="k-label">失败待处理</div><div class="k-num" style="color:var(--err)">3</div><div class="k-delta muted">自动重试中 2</div></div>
+      </div>
+      <div class="card">
+        <div class="card-head">订阅关系<span><button class="btn sm primary" onclick="toast('演示：新建订阅（选域 → 选字段 → 选方式）')"><svg class="ic"><use href="#ic-plus"/></svg>新建订阅</button></span></div>
+        <table class="tbl">
+          <thead><tr><th>订阅方</th><th>订阅主数据域</th><th>字段范围</th><th>分发方式</th><th>最新同步</th><th>状态</th><th>操作</th></tr></thead>
+          <tbody>
+            <tr><td><b>ERP</b></td><td>物料 + 组织机构</td><td>全部字段</td><td><span class="tag b">API 拉取</span> 每 5 分钟</td><td class="muted">11-16 08:45</td><td><span class="tag g">正常</span></td><td><span class="link" onclick="toast('演示：手动触发全量同步')">手动同步</span><span class="link" onclick="toast('对账完成：MDM 520,340 = ERP 520,340，无差异')">对账</span></td></tr>
+            <tr><td><b>CRM</b></td><td>客户 + 员工</td><td>全部字段</td><td><span class="tag p">Webhook 推送</span> 实时</td><td class="muted">11-16 08:30</td><td><span class="tag g">正常</span></td><td><span class="link" onclick="toast('演示：手动触发全量同步')">手动同步</span><span class="link" onclick="toast('对账完成：无差异')">对账</span></td></tr>
+            <tr><td><b>SRM</b></td><td>供应商</td><td>除银行账号外</td><td><span class="tag p">MQ 推送</span> 实时</td><td class="muted">11-16 08:12</td><td><span class="tag g">正常</span></td><td><span class="link" onclick="toast('演示：手动触发全量同步')">手动同步</span><span class="link" onclick="toast('对账完成：无差异')">对账</span></td></tr>
+            <tr><td><b>BI 平台</b></td><td>全域</td><td>全部字段</td><td><span class="tag b">API 拉取</span> 每日 01:00</td><td class="muted">11-16 01:00</td><td><span class="tag g">正常</span></td><td><span class="link" onclick="toast('演示：手动触发全量同步')">手动同步</span><span class="link" onclick="toast('对账完成：无差异')">对账</span></td></tr>
+            <tr><td><b>MES</b></td><td>物料</td><td>编码/名称/规格/单位</td><td><span class="tag p">Webhook 推送</span> 实时</td><td class="muted">11-16 07:40</td><td><span class="tag r">重试中</span></td><td><span class="link" onclick="toast('演示：手动触发全量同步')">手动同步</span><span class="link" onclick="toast('对账发现 3 条差异，已生成补发任务')">对账</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="tab-pane" data-p="src">
+      <div class="card">
+        <div class="card-head">已注册源系统</div>
+        <table class="tbl">
+          <thead><tr><th>源系统</th><th>接入范围</th><th>采集方式</th><th>清洗规则</th><th>最近采集</th><th>状态</th><th>操作</th></tr></thead>
+          <tbody>
+            <tr><td><b>老 ERP（金蝶 K3）</b></td><td>物料 / 客户 / 供应商存量</td><td><span class="tag b">数据库直连</span></td><td class="muted">码值映射 12 条 · 去空格 · 统一全角半角</td><td class="muted">11-16 01:20</td><td><span class="tag g">正常</span></td><td><span class="link" onclick="toast('演示：字段映射配置')">映射配置</span></td></tr>
+            <tr><td><b>CRM（销售云）</b></td><td>客户增量</td><td><span class="tag p">API 拉取</span></td><td class="muted">客户行业码值映射 · 手机号脱敏入库</td><td class="muted">11-16 08:30</td><td><span class="tag g">正常</span></td><td><span class="link" onclick="toast('演示：字段映射配置')">映射配置</span></td></tr>
+            <tr><td><b>SRM</b></td><td>供应商准入</td><td><span class="tag p">API 拉取</span></td><td class="muted">证照附件归档 · 信用代码校验</td><td class="muted">11-16 08:12</td><td><span class="tag g">正常</span></td><td><span class="link" onclick="toast('演示：字段映射配置')">映射配置</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="tab-pane" data-p="log">
+      <div class="card">
+        <div class="card-head">分发日志
+          <span class="fbar" style="margin:0">
+            <select><option>全部订阅方</option><option>ERP</option><option>CRM</option><option>MES</option></select>
+            <select><option>全部结果</option><option>成功</option><option>失败</option></select>
+            <button class="btn sm" onclick="toast('演示：按条件查询')">查询</button>
+          </span>
+        </div>
+        <table class="tbl">
+          <thead><tr><th>时间</th><th>订阅方</th><th>事件</th><th>主数据 / 记录数</th><th>耗时</th><th>结果</th><th>操作</th></tr></thead>
+          <tbody>
+            <tr><td class="muted">11-16 08:45:12</td><td>ERP</td><td>增量拉取</td><td>物料 · <span class="num">142</span> 条</td><td class="num">2.1s</td><td><span class="tag g">成功</span></td><td class="muted">—</td></tr>
+            <tr><td class="muted">11-16 08:30:05</td><td>CRM</td><td>变更推送</td><td>客户 KH20260205-0007 · 1 条</td><td class="num">0.4s</td><td><span class="tag g">成功</span></td><td class="muted">—</td></tr>
+            <tr><td class="muted">11-16 08:12:44</td><td>MES</td><td>变更推送</td><td>物料 WL20260102-0001 · 1 条</td><td class="num">10.0s</td><td><span class="tag r">失败</span></td><td><span class="link" onclick="toast('已重新推送并计入重试队列')">重试</span><span class="link" onclick="toast('演示：查看推送报文')">报文</span></td></tr>
+            <tr><td class="muted">11-16 07:40:21</td><td>MES</td><td>变更推送</td><td>物料 WL20260118-0022 · 1 条</td><td class="num">10.0s</td><td><span class="tag r">失败</span></td><td><span class="link" onclick="toast('已重新推送并计入重试队列')">重试</span><span class="link" onclick="toast('演示：查看推送报文')">报文</span></td></tr>
+            <tr><td class="muted">11-16 07:55:03</td><td>SRM</td><td>变更推送</td><td>供应商 GYS20260310-0004 · 1 条</td><td class="num">0.3s</td><td><span class="tag g">成功</span></td><td class="muted">—</td></tr>
+          </tbody>
+        </table>
+        <div style="padding:10px 14px;border-top:1px solid var(--bd)" class="hint"><svg class="ic"><use href="#ic-refresh"/></svg> 失败自动重试策略：10s / 1min / 10min / 1h，共 4 次；连续失败触发订阅熔断并告警</div>
+      </div>
+    </div>
+  </div>
+</div>
+</section>
+      <section id="s-workflow" class="screen">
+  <div class="wf-toolbar">
+    <button class="tb-btn run" onclick="wfRun()"><svg class="ic"><use href="#ic-play"/></svg>运行</button>
+    <button class="tb-btn" onclick="wfStop()"><svg class="ic"><use href="#ic-stop"/></svg>停止</button>
+    <span class="tb-sep"></span>
+    <button class="tb-btn" onclick="toast('工作流校验通过：6 个节点 · 5 条连接 · 无错误')"><svg class="ic"><use href="#ic-shield"/></svg>校验</button>
+    <button class="tb-btn" onclick="toast('演示：撤销上一步操作')"><svg class="ic"><use href="#ic-undo"/></svg>撤销</button>
+    <button class="tb-btn" onclick="toast('演示：重做')"><svg class="ic"><use href="#ic-redo"/></svg>重做</button>
+    <span class="tb-sep"></span>
+    <button class="tb-btn" onclick="toast('演示：画布缩放 100%')"><svg class="ic"><use href="#ic-zoom"/></svg>100%</button>
+    <button class="tb-btn" onclick="toast('工作流已保存：WF-003 物料存量数据清洗 V2')"><svg class="ic"><use href="#ic-save"/></svg>保存</button>
+    <span class="fr muted" style="margin-right:8px;font-size:12px">WF-003 · 物料存量数据清洗 · V2 · 草稿</span>
+    <div style="position:relative">
+      <button class="tb-btn notes-btn" onclick="toggleNotes('wf-notes')">设计要点 · 对标 Alteryx</button>
+      <div class="notes-pop" id="wf-notes">
+        <b>本页面对标 Alteryx Designer</b>
+        <ul>
+          <li>左侧节点工具箱：<b>图标放大、功能说明文字位于图标下方</b>，按 输入/准备/转换/关联/清洗/输出 分组（与 Alteryx 工具面板一致）</li>
+          <li>中间画布：拖拽节点、连线成数据流；节点可拖动，连线自动重算</li>
+          <li>选中节点打开<b>配置窗口</b>（对应 Alteryx Configuration）</li>
+          <li>每个节点可<b>预览输出数据与元数据</b>（对应 Browse 工具）</li>
+          <li>点击「运行」：节点逐个亮起，底部结果窗口展示输出数据</li>
+          <li>顶部工具栏：运行 / 停止 / 校验 / 撤销重做 / 缩放 / 保存</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="wf-body">
+    <div class="wf-toolbox" id="wf-toolbox"></div>
+    <div class="wf-cv-wrap" id="wf-cvwrap">
+      <div class="wf-cv" id="wf-cv">
+        <svg class="wf-svg" id="wf-svg"></svg>
+      </div>
+      <div class="wf-cfg" id="wf-cfg">
+        <div class="c-head"><span id="wf-cfg-t">配置</span><span class="x" onclick="wfCloseCfg()">×</span></div>
+        <div class="c-body" id="wf-cfg-b"></div>
+      </div>
+    </div>
+  </div>
+  <div class="wf-res" id="wf-res">
+    <div class="r-tabs">
+      <div class="r-tab active" onclick="wfRT(this,'data')">数据</div>
+      <div class="r-tab" onclick="wfRT(this,'meta')">元数据</div>
+      <div class="r-tab" onclick="wfRT(this,'msg')">消息</div>
+      <span class="fr muted" id="wf-res-t" style="margin:8px 14px 0 0"></span>
+    </div>
+    <div class="r-pane-wrap">
+      <div class="r-pane on" id="wf-r-data"><div class="r-head" style="padding:8px 10px 0"></div><table class="tbl" id="wf-r-table"></table></div>
+      <div class="r-pane" id="wf-r-meta"><div class="r-head" style="padding:8px 10px 0"></div><table class="tbl" id="wf-r-mtable"></table></div>
+      <div class="r-pane" id="wf-r-msg"><div style="padding:10px 14px;font-family:Menlo,Consolas,monospace;font-size:12px;line-height:1.9;color:#334155" id="wf-r-log"></div></div>
+    </div>
+  </div>
+</section>
+      <section id="s-approval" class="screen">
+<div class="wrap">
+  <div class="page-head">
+    <div><h2>审批中心</h2><p class="desc">主数据全生命周期流程审批：待办处理、进度跟踪、流程效率（设计文档 3.7）</p></div>
+    <div class="flex"><button class="btn" onclick="toast('演示：打开可视化流程设计器（拖拽节点 / 条件分支 / 会签或签）')"><svg class="ic"><use href="#ic-flow"/></svg>流程设计器</button></div>
+  </div>
+  <div class="tabs" data-panes="#ap-panes">
+    <div class="tab active" data-p="todo">我的待办 <span class="tag r">3</span></div>
+    <div class="tab" data-p="mine">我的申请</div>
+    <div class="tab" data-p="done">我的已办</div>
+  </div>
+  <div id="ap-panes">
+    <div class="tab-pane show" data-p="todo">
+      <div class="card">
+        <div class="ap-item" id="ap-1">
+          <span class="ap-ico b"><svg class="ic"><use href="#ic-md"/></svg></span>
+          <div style="flex:1;min-width:0"><div class="ap-t">物料新增 · 不锈钢轴承 6204-2Z</div><div class="ap-m">SP202611160012 · 张伟（制造部）· 提交于 11-16 09:12 · 当前环节：<b>部门初审</b> · 等待 2.5h</div></div>
+          <button class="btn sm primary" onclick="openLayer('dw-ap')">处理</button>
+        </div>
+        <div class="ap-item" id="ap-2">
+          <span class="ap-ico o"><svg class="ic"><use href="#ic-edit"/></svg></span>
+          <div style="flex:1;min-width:0"><div class="ap-t">客户变更 · 上海临港新能源科技有限公司（银行账号变更）</div><div class="ap-m">SP202611150031 · 王芳（销售部）· 当前环节：<b>数据治理岗复审</b> · <span class="overtime">等待 26h 超时</span></div></div>
+          <button class="btn sm primary" onclick="openLayer('dw-ap')">处理</button>
+        </div>
+        <div class="ap-item" id="ap-3">
+          <span class="ap-ico p"><svg class="ic"><use href="#ic-plus"/></svg></span>
+          <div style="flex:1;min-width:0"><div class="ap-t">供应商新增 · 江苏恒力传动科技有限公司</div><div class="ap-m">SP202611150008 · 李娜（采购部）· 当前环节：<b>数据治理岗复审</b> · 等待 5h</div></div>
+          <button class="btn sm primary" onclick="openLayer('dw-ap')">处理</button>
+        </div>
+      </div>
+    </div>
+    <div class="tab-pane" data-p="mine">
+      <div class="card">
+        <table class="tbl">
+          <thead><tr><th>单号</th><th>类型</th><th>标题</th><th>当前环节</th><th>提交时间</th><th>状态</th><th>操作</th></tr></thead>
+          <tbody>
+            <tr><td>SP202611140021</td><td><span class="tag b">物料变更</span></td><td>铝合金型材 6063-T5 规格修订</td><td>数据治理岗复审</td><td class="muted">11-14 16:40</td><td><span class="tag o">审批中</span></td><td><span class="link" onclick="toast('演示：查看流程图与审批记录')">进度</span></td></tr>
+            <tr><td>SP202611100007</td><td><span class="tag p">码表变更</span></td><td>计量单位码表新增「千件 (KPC)」</td><td>已完成</td><td class="muted">11-10 10:02</td><td><span class="tag g">已发布</span></td><td><span class="link" onclick="toast('演示：查看流程图与审批记录')">进度</span></td></tr>
+            <tr><td>SP202611050014</td><td><span class="tag b">物料新增</span></td><td>液压油滤芯 HX-40×10Q（已冻结）</td><td>已完成</td><td class="muted">11-05 09:20</td><td><span class="tag g">已发布</span></td><td><span class="link" onclick="toast('演示：查看流程图与审批记录')">进度</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="tab-pane" data-p="done">
+      <div class="card">
+        <table class="tbl">
+          <thead><tr><th>单号</th><th>类型</th><th>标题</th><th>我的环节</th><th>处理时间</th><th>结果</th></tr></thead>
+          <tbody>
+            <tr><td>SP202611150002</td><td><span class="tag b">物料变更</span></td><td>密封圈 NBR 规格补充</td><td>数据治理岗复审</td><td class="muted">11-15 14:30</td><td><span class="tag g">通过</span></td></tr>
+            <tr><td>SP202611140009</td><td><span class="tag o">客户新增</span></td><td>北京中科算力信息技术有限公司</td><td>数据治理岗复审</td><td class="muted">11-14 11:05</td><td><span class="tag g">通过</span></td></tr>
+            <tr><td>SP202611120018</td><td><span class="tag b">物料新增</span></td><td>碳钢焊丝 ER50-6（资料不全）</td><td>数据治理岗复审</td><td class="muted">11-12 17:22</td><td><span class="tag r">驳回</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="layer" id="dw-ap">
+  <div class="l-mask" onclick="closeLayer('dw-ap')"></div>
+  <div class="drawer w560">
+    <div class="d-title">审批 · SP202611160012 物料新增<span class="x" onclick="closeLayer('dw-ap')">×</span></div>
+    <div class="d-body">
+      <div class="card" style="margin-bottom:12px"><div class="card-body">
+        <div class="kv"><b>申请类型</b><span>物料主数据 · 新增</span></div>
+        <div class="kv"><b>申请人</b><span>张伟 · 制造部 · 11-16 09:12</span></div>
+        <div class="kv"><b>申请说明</b><span>引入新轴承型号，用于 RV063 减速机配套</span></div>
+        <div class="kv"><b>自动查重</b><span><span class="tag g">未发现重复</span></span></div>
+      </div></div>
+      <div class="hint" style="margin-bottom:6px">申请内容</div>
+      <table class="tbl" style="margin-bottom:14px">
+        <thead><tr><th style="width:130px">字段</th><th>申请值</th></tr></thead>
+        <tbody>
+          <tr><td>物料名称</td><td><b>不锈钢轴承 6204-2Z</b></td></tr>
+          <tr><td>规格型号</td><td>20×47×14 · 两面防尘盖</td></tr>
+          <tr><td>物料分类</td><td>轴承件 / 球轴承</td></tr>
+          <tr><td>计量单位</td><td>套 (SET)</td></tr>
+          <tr><td>物料属性</td><td>外购</td></tr>
+        </tbody>
+      </table>
+      <div class="hint" style="margin-bottom:6px">审批链（发起 → 部门初审 → 治理岗复审 → 自动发布）</div>
+      <div class="tl">
+        <div class="tl-item ok"><b>发起申请</b><div class="hint">张伟 · 09:12</div></div>
+        <div class="tl-item cur"><b>部门初审</b><div class="hint">王强（制造部主管）· 待处理</div></div>
+        <div class="tl-item"><b>数据治理岗复审</b><div class="hint">宋明 · 未开始</div></div>
+        <div class="tl-item"><b>自动编码并发布</b><div class="hint">系统 · 发布后推送全部订阅方</div></div>
+      </div>
+      <div class="form-item mt14"><label>审批意见</label><textarea rows="3" placeholder="填写审批意见（可选）"></textarea></div>
+    </div>
+    <div class="d-foot">
+      <button class="btn danger" onclick="apReject()">驳回</button>
+      <button class="btn" onclick="toast('演示：转办给其他审批人')">转办</button>
+      <button class="btn primary" onclick="apPass('ap-1')">通过</button>
+    </div>
+  </div>
+</div>
+</section>
+      <section id="s-dashboard" class="screen">
+  <div class="pbi-top">
+    <span class="pbi-crumb">治理仪表板 · <b id="pbi-pgname">主数据资产总览</b></span>
+    <div class="fr flex" style="gap:8px">
+      <button class="vm-btn" onclick="toast('演示：刷新数据集')"><svg class="ic"><use href="#ic-refresh"/></svg>刷新</button>
+      <div style="position:relative">
+        <button class="vm-btn" onclick="E('vmenu').classList.toggle('show')"><svg class="ic"><use href="#ic-eye"/></svg>视图</button>
+        <div class="vmenu" id="vmenu">
+          <div class="vm-it" onclick="pbiView(false)"><span>阅读视图</span><svg class="ic" id="vm-chk-r" style="width:13px;height:13px;color:var(--ok);visibility:hidden"><use href="#ic-check"/></svg></div>
+          <div class="vm-it" onclick="pbiView(true)"><span>编辑视图</span><svg class="ic" id="vm-chk-e" style="width:13px;height:13px;color:var(--ok)"><use href="#ic-check"/></svg></div>
+          <div class="vm-it" onclick="E('vmenu').classList.remove('show');toast('演示：导出为 PDF')"><span>导出</span></div>
+          <div class="vm-it" onclick="E('vmenu').classList.remove('show');toast('演示：打开性能检查器')"><span>性能</span></div>
+        </div>
+      </div>
+      <div style="position:relative">
+        <button class="vm-btn notes-btn" onclick="toggleNotes('pbi-notes')">设计要点 · 对标 Power BI</button>
+        <div class="notes-pop" id="pbi-notes">
+          <b>本页面对标 Power BI</b>
+          <ul>
+            <li><b>视图菜单</b>：阅读视图（查看 + 交叉筛选）/ 编辑视图（设计），切换右侧面板</li>
+            <li>右侧三面板：<b>可视化 / 筛选器 / 字段</b>；筛选器分「视觉对象 · 页面 · 报表」三级作用域</li>
+            <li><b>切片器</b>（年度）；单击柱状图 = <b>交叉筛选</b>，联动卡片 / 环形图 / 表格</li>
+            <li>双击「物料」柱 = <b>层级下钻</b>至分类明细，可返回上级</li>
+            <li>悬停图表 = <b>工具提示</b>；悬停视觉对象 = 出现「更多选项 / 格式」视觉对象标头</li>
+            <li>底部<b>页面标签</b>：多页报表切换（资产总览 / 质量评分卡 / 集成监控）</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="pbi-body">
+    <div class="pbi-canvas">
+      <div class="pbi-canvas-in">
+
+        <div class="pbi-page show" data-p="1">
+          <div class="v-kpis">
+            <div class="v-kpi" onclick="vSel(this)"><div class="v-tools"><span class="vt-btn"><svg class="ic"><use href="#ic-more"/></svg></span><span class="vt-btn"><svg class="ic"><use href="#ic-gear"/></svg></span></div><div class="vk-l">主数据总量</div><div class="vk-v" id="dk1">—</div><div class="vk-d" id="dk1d" style="color:#107c10"></div></div>
+            <div class="v-kpi" onclick="vSel(this)"><div class="v-tools"><span class="vt-btn"><svg class="ic"><use href="#ic-more"/></svg></span><span class="vt-btn"><svg class="ic"><use href="#ic-gear"/></svg></span></div><div class="vk-l">本月新增</div><div class="vk-v" id="dk2">—</div><div class="vk-d" id="dk2d" style="color:#107c10"></div></div>
+            <div class="v-kpi" onclick="vSel(this)"><div class="v-tools"><span class="vt-btn"><svg class="ic"><use href="#ic-more"/></svg></span><span class="vt-btn"><svg class="ic"><use href="#ic-gear"/></svg></span></div><div class="vk-l">已发布占比</div><div class="vk-v" id="dk3">—</div><div class="vk-d" id="dk3d" style="color:#605e5c"></div></div>
+            <div class="v-kpi" onclick="vSel(this)"><div class="v-tools"><span class="vt-btn"><svg class="ic"><use href="#ic-more"/></svg></span><span class="vt-btn"><svg class="ic"><use href="#ic-gear"/></svg></span></div><div class="vk-l">数据质量评分</div><div class="vk-v" id="dk4">—</div><div class="vk-d" id="dk4d" style="color:#107c10"></div></div>
+          </div>
+          <div class="vrow">
+            <div class="visual slicer" style="width:168px;flex:none" onclick="vSel(this)">
+              <div class="v-tools"><span class="vt-btn"><svg class="ic"><use href="#ic-more"/></svg></span><span class="vt-btn"><svg class="ic"><use href="#ic-gear"/></svg></span></div>
+              <div class="s-l">年度</div>
+              <div id="s-year"><span class="s-btn" data-y="2024" onclick="dYear(2024)">2024</span><span class="s-btn" data-y="2025" onclick="dYear(2025)">2025</span><span class="s-btn on" data-y="2026" onclick="dYear(2026)">2026</span></div>
+              <div class="s-l" style="margin-top:10px">主数据域</div>
+              <div><span class="s-btn on" onclick="toast('演示：域多选切片器，与柱图交叉筛选等效')">全部</span></div>
+              <div class="hint" style="margin-top:10px">切片器 Slicer</div>
+            </div>
+            <div class="visual" style="flex:1.25" onclick="vSel(this)">
+              <div class="v-tools"><span class="vt-btn"><svg class="ic"><use href="#ic-more"/></svg></span><span class="vt-btn"><svg class="ic"><use href="#ic-gear"/></svg></span></div>
+              <div class="v-title" id="d-bar-title">各主数据域数据量</div>
+              <div id="d-bar"></div>
+            </div>
+            <div class="visual" style="flex:1" onclick="vSel(this)">
+              <div class="v-tools"><span class="vt-btn"><svg class="ic"><use href="#ic-more"/></svg></span><span class="vt-btn"><svg class="ic"><use href="#ic-gear"/></svg></span></div>
+              <div class="v-title" id="d-line-title">月度新增趋势</div>
+              <div id="d-line"></div>
+            </div>
+          </div>
+          <div class="vrow">
+            <div class="visual" style="width:310px;flex:none" onclick="vSel(this)">
+              <div class="v-tools"><span class="vt-btn"><svg class="ic"><use href="#ic-more"/></svg></span><span class="vt-btn"><svg class="ic"><use href="#ic-gear"/></svg></span></div>
+              <div class="v-title">生命周期状态分布</div>
+              <div id="d-donut"></div>
+            </div>
+            <div class="visual" style="flex:1" onclick="vSel(this)">
+              <div class="v-tools"><span class="vt-btn"><svg class="ic"><use href="#ic-more"/></svg></span><span class="vt-btn"><svg class="ic"><use href="#ic-gear"/></svg></span></div>
+              <div class="v-title">域明细</div>
+              <div style="overflow:auto"><table class="tbl" id="d-table"></table></div>
+            </div>
+          </div>
+          <div class="flex" style="gap:10px;flex-wrap:wrap">
+            <span class="dchip" id="d-chip" style="display:none">主数据域：<b id="d-chip-name"></b><span class="f-x" onclick="dClear()">×</span></span>
+            <span class="hint">单击柱图 = 交叉筛选 · 双击「物料」柱 = 下钻至分类 · 悬停查看工具提示</span>
+          </div>
+        </div>
+
+        <div class="pbi-page" data-p="2">
+          <div class="v-kpis">
+            <div class="v-kpi" onclick="vSel(this)"><div class="v-tools"><span class="vt-btn"><svg class="ic"><use href="#ic-more"/></svg></span><span class="vt-btn"><svg class="ic"><use href="#ic-gear"/></svg></span></div><div class="vk-l">综合评分</div><div class="vk-v">94.2</div><div class="vk-d" style="color:#107c10">较上月 +0.6</div></div>
+            <div class="v-kpi" onclick="vSel(this)"><div class="v-tools"><span class="vt-btn"><svg class="ic"><use href="#ic-more"/></svg></span><span class="vt-btn"><svg class="ic"><use href="#ic-gear"/></svg></span></div><div class="vk-l">完整性</div><div class="vk-v">98.1</div><div class="vk-d" style="color:#605e5c">空值 128 处</div></div>
+            <div class="v-kpi" onclick="vSel(this)"><div class="v-tools"><span class="vt-btn"><svg class="ic"><use href="#ic-more"/></svg></span><span class="vt-btn"><svg class="ic"><use href="#ic-gear"/></svg></span></div><div class="vk-l">唯一性</div><div class="vk-v">99.4</div><div class="vk-d" style="color:#605e5c">疑似重复 36</div></div>
+            <div class="v-kpi" onclick="vSel(this)"><div class="v-tools"><span class="vt-btn"><svg class="ic"><use href="#ic-more"/></svg></span><span class="vt-btn"><svg class="ic"><use href="#ic-gear"/></svg></span></div><div class="vk-l">合法性</div><div class="vk-v">92.8</div><div class="vk-d" style="color:#d13438">格式错误 12</div></div>
+            <div class="v-kpi" onclick="vSel(this)"><div class="v-tools"><span class="vt-btn"><svg class="ic"><use href="#ic-more"/></svg></span><span class="vt-btn"><svg class="ic"><use href="#ic-gear"/></svg></span></div><div class="vk-l">一致性</div><div class="vk-v">96.5</div><div class="vk-d" style="color:#605e5c">逻辑冲突 5</div></div>
+            <div class="v-kpi" onclick="vSel(this)"><div class="v-tools"><span class="vt-btn"><svg class="ic"><use href="#ic-more"/></svg></span><span class="vt-btn"><svg class="ic"><use href="#ic-gear"/></svg></span></div><div class="vk-l">及时性</div><div class="vk-v">89.0</div><div class="vk-d" style="color:#d13438">证照过期 23</div></div>
+          </div>
+          <div class="vrow">
+            <div class="visual" style="flex:1.3" onclick="vSel(this)">
+              <div class="v-tools"><span class="vt-btn"><svg class="ic"><use href="#ic-more"/></svg></span><span class="vt-btn"><svg class="ic"><use href="#ic-gear"/></svg></span></div>
+              <div class="v-title">近 30 天质量评分趋势</div><div id="p2-line"></div>
+            </div>
+            <div class="visual" style="flex:1" onclick="vSel(this)">
+              <div class="v-tools"><span class="vt-btn"><svg class="ic"><use href="#ic-more"/></svg></span><span class="vt-btn"><svg class="ic"><use href="#ic-gear"/></svg></span></div>
+              <div class="v-title">问题按维度分布</div><div id="p2-dim"></div>
+            </div>
+          </div>
+          <div class="visual" onclick="vSel(this)">
+            <div class="v-tools"><span class="vt-btn"><svg class="ic"><use href="#ic-more"/></svg></span><span class="vt-btn"><svg class="ic"><use href="#ic-gear"/></svg></span></div>
+            <div class="v-title">问题清单（Top 5）</div>
+            <table class="tbl">
+              <thead><tr><th>发现时间</th><th>域</th><th>维度</th><th>问题描述</th><th>影响记录数</th><th>严重度</th><th>状态</th></tr></thead>
+              <tbody>
+                <tr><td class="muted">11-16</td><td>物料</td><td>完整性</td><td>计量单位为空</td><td class="num">128</td><td><span class="tag r">高</span></td><td><span class="tag o">待整改</span></td></tr>
+                <tr><td class="muted">11-16</td><td>客户</td><td>唯一性</td><td>疑似重复客户（相似度 ≥ 85%）</td><td class="num">36</td><td><span class="tag o">中</span></td><td><span class="tag o">待整改</span></td></tr>
+                <tr><td class="muted">11-15</td><td>供应商</td><td>及时性</td><td>资质证照已过期未更新</td><td class="num">23</td><td><span class="tag o">中</span></td><td><span class="tag o">待整改</span></td></tr>
+                <tr><td class="muted">11-16</td><td>供应商</td><td>合法性</td><td>统一社会信用代码格式错误</td><td class="num">12</td><td><span class="tag r">高</span></td><td><span class="tag b">整改中</span></td></tr>
+                <tr><td class="muted">11-14</td><td>物料</td><td>一致性</td><td>有效期止早于有效期起</td><td class="num">5</td><td><span class="tag s">低</span></td><td><span class="tag g">已闭环</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="pbi-page" data-p="3">
+          <div class="v-kpis">
+            <div class="v-kpi" onclick="vSel(this)"><div class="v-tools"><span class="vt-btn"><svg class="ic"><use href="#ic-more"/></svg></span><span class="vt-btn"><svg class="ic"><use href="#ic-gear"/></svg></span></div><div class="vk-l">推送成功率</div><div class="vk-v">99.2%</div><div class="vk-d" style="color:#107c10">本周 +0.3%</div></div>
+            <div class="v-kpi" onclick="vSel(this)"><div class="v-tools"><span class="vt-btn"><svg class="ic"><use href="#ic-more"/></svg></span><span class="vt-btn"><svg class="ic"><use href="#ic-gear"/></svg></span></div><div class="vk-l">今日推送事件</div><div class="vk-v">12,482</div><div class="vk-d" style="color:#605e5c">均值 520 / 小时</div></div>
+            <div class="v-kpi" onclick="vSel(this)"><div class="v-tools"><span class="vt-btn"><svg class="ic"><use href="#ic-more"/></svg></span><span class="vt-btn"><svg class="ic"><use href="#ic-gear"/></svg></span></div><div class="vk-l">失败待处理</div><div class="vk-v" style="color:#d13438">3</div><div class="vk-d" style="color:#605e5c">自动重试中 2</div></div>
+            <div class="v-kpi" onclick="vSel(this)"><div class="v-tools"><span class="vt-btn"><svg class="ic"><use href="#ic-more"/></svg></span><span class="vt-btn"><svg class="ic"><use href="#ic-gear"/></svg></span></div><div class="vk-l">平均推送延迟</div><div class="vk-v">0.8s</div><div class="vk-d" style="color:#107c10">P99 ≤ 3s</div></div>
+          </div>
+          <div class="vrow">
+            <div class="visual" style="flex:1.3" onclick="vSel(this)">
+              <div class="v-tools"><span class="vt-btn"><svg class="ic"><use href="#ic-more"/></svg></span><span class="vt-btn"><svg class="ic"><use href="#ic-gear"/></svg></span></div>
+              <div class="v-title">近 7 日推送量趋势</div><div id="p3-line"></div>
+            </div>
+            <div class="visual" style="flex:1" onclick="vSel(this)">
+              <div class="v-tools"><span class="vt-btn"><svg class="ic"><use href="#ic-more"/></svg></span><span class="vt-btn"><svg class="ic"><use href="#ic-gear"/></svg></span></div>
+              <div class="v-title">各订阅方今日事件占比</div><div id="p3-donut"></div>
+            </div>
+          </div>
+          <div class="visual" onclick="vSel(this)">
+            <div class="v-tools"><span class="vt-btn"><svg class="ic"><use href="#ic-more"/></svg></span><span class="vt-btn"><svg class="ic"><use href="#ic-gear"/></svg></span></div>
+            <div class="v-title">失败明细</div>
+            <table class="tbl">
+              <thead><tr><th>时间</th><th>订阅方</th><th>事件</th><th>主数据</th><th>重试次数</th><th>原因</th></tr></thead>
+              <tbody>
+                <tr><td class="muted">08:12:44</td><td>MES</td><td>变更推送</td><td>WL20260102-0001</td><td class="num">2</td><td class="muted">Webhook 超时（10s）</td></tr>
+                <tr><td class="muted">07:40:21</td><td>MES</td><td>变更推送</td><td>WL20260118-0022</td><td class="num">3</td><td class="muted">Webhook 超时（10s）</td></tr>
+                <tr><td class="muted">03:15:02</td><td>BI 平台</td><td>全量拉取</td><td>物料 · 分页 42/52</td><td class="num">1</td><td class="muted">源端限流 429</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+    </div>
+    <div class="pbi-panel">
+      <div class="pp-tabs">
+        <div class="pp-tab active" onclick="ppTab(this,'pp-viz')">可视化</div>
+        <div class="pp-tab" onclick="ppTab(this,'pp-flt')">筛选器</div>
+        <div class="pp-tab" onclick="ppTab(this,'pp-fld')">字段</div>
+      </div>
+      <div class="pp-body">
+        <div class="pp-pane on" id="pp-viz">
+          <div class="chart-types">
+            <span class="ctype on" title="堆积柱形图" onclick="ctSel(this)"><svg><use href="#ic-chart"/></svg></span>
+            <span class="ctype" title="折线图" onclick="ctSel(this)"><svg><use href="#ic-line"/></svg></span>
+            <span class="ctype" title="饼图" onclick="ctSel(this)"><svg><use href="#ic-pie"/></svg></span>
+            <span class="ctype" title="卡片" onclick="ctSel(this)"><svg><use href="#ic-cardv"/></svg></span>
+            <span class="ctype" title="表" onclick="ctSel(this)"><svg><use href="#ic-table2"/></svg></span>
+            <span class="ctype" title="矩阵" onclick="ctSel(this)"><svg><use href="#ic-matrix"/></svg></span>
+            <span class="ctype" title="切片器" onclick="ctSel(this)"><svg><use href="#ic-sliceri"/></svg></span>
+            <span class="ctype" title="散点图" onclick="ctSel(this)"><svg><use href="#ic-scatter"/></svg></span>
+            <span class="ctype" title="瀑布图" onclick="ctSel(this)"><svg><use href="#ic-cross"/></svg></span>
+            <span class="ctype" title="功能区" onclick="ctSel(this)"><svg><use href="#ic-fuzzy"/></svg></span>
+            <span class="ctype" title="树状图" onclick="ctSel(this)"><svg><use href="#ic-model"/></svg></span>
+            <span class="ctype" title="仪表" onclick="ctSel(this)"><svg><use href="#ic-browse"/></svg></span>
+          </div>
+          <div class="pp-sec">格式 · 视觉对象</div>
+          <div class="f-item-pbi"><div class="fi-t"><b>标题</b><span class="sw on" onclick="this.classList.toggle('on')"></span></div></div>
+          <div class="f-item-pbi"><div class="fi-t"><b>背景色</b><span class="sw on" onclick="this.classList.toggle('on')"></span></div></div>
+          <div class="f-item-pbi"><div class="fi-t"><b>边框</b><span class="sw" onclick="this.classList.toggle('on')"></span></div></div>
+          <div class="f-item-pbi"><div class="fi-t"><b>数据标签</b><span class="sw" onclick="this.classList.toggle('on')"></span></div></div>
+          <div class="pp-sec">分析</div>
+          <div class="hint" style="padding:2px">演示环境暂未开放分析线 / 恒线配置</div>
+        </div>
+        <div class="pp-pane" id="pp-flt">
+          <div class="pp-sec">视觉对象</div>
+          <div class="hint" style="padding:2px 2px 10px" id="pp-vo-hint">未选择可视化。单击画布中的可视化后可查看其筛选器。</div>
+          <div class="pp-sec">页面</div>
+          <div class="f-item-pbi"><div class="fi-t"><b>年度</b><span class="f-x" onclick="toast('演示：清除筛选')">×</span></div><span class="muted" id="df-year">是 2026</span></div>
+          <div class="f-item-pbi"><div class="fi-t"><b>主数据域</b><span class="f-x" id="df-dom-x" style="display:none" onclick="dClear()">×</span></div><span class="muted" id="df-dom">全部</span></div>
+          <div class="pp-sec">报表</div>
+          <div class="f-item-pbi"><div class="fi-t"><b>生命周期状态</b></div><span class="muted">全部（含已归档）</span></div>
+          <div class="f-item-pbi"><div class="fi-t"><b>数据源</b></div><span class="muted">主数据资产模型（直连）</span></div>
+        </div>
+        <div class="pp-pane" id="pp-fld">
+          <div class="fld" style="font-weight:600"><svg class="ic co"><use href="#ic-table2"/></svg>主数据资产模型<svg class="ic" style="margin-left:auto"><use href="#ic-chev-d"/></svg></div>
+          <div class="fld" onclick="fldSel(this)"><input type="checkbox" checked><span>域名称</span></div>
+          <div class="fld" onclick="fldSel(this)"><input type="checkbox" checked><span>数据总量</span></div>
+          <div class="fld" onclick="fldSel(this)"><input type="checkbox" checked><span>本月新增</span></div>
+          <div class="fld" onclick="fldSel(this)"><input type="checkbox" checked><span>质量评分</span></div>
+          <div class="fld" onclick="fldSel(this)"><input type="checkbox" checked><span>已发布占比</span></div>
+          <div class="fld" onclick="fldSel(this)"><input type="checkbox" checked><span>状态分布</span></div>
+          <div class="fld" onclick="fldSel(this)"><input type="checkbox"><span>最近分发时间</span></div>
+          <div class="fld" onclick="fldSel(this)"><input type="checkbox"><span>订阅方数量</span></div>
+          <div class="hint" style="margin-top:10px">勾选字段将绑定到当前选中的可视化（编辑视图下生效）</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="pbi-pages">
+    <div class="pg active" onclick="pbiPage('1',this)">主数据资产总览</div>
+    <div class="pg" onclick="pbiPage('2',this)">数据质量评分卡</div>
+    <div class="pg" onclick="pbiPage('3',this)">集成监控</div>
+    <span class="fr muted" style="font-size:11px;margin-right:8px">页面 <span id="pbi-pgno">1</span> / 3</span>
+  </div>
+</section>
+      <section id="s-system" class="screen">
+<div class="wrap">
+  <div class="page-head">
+    <div><h2>系统管理</h2><p class="desc">用户与角色权限、任务调度、系统参数、审计日志（设计文档 3.9 / 3.10）</p></div>
+  </div>
+  <div class="tabs" data-panes="#sys-panes">
+    <div class="tab active" data-p="user">用户与角色</div>
+    <div class="tab" data-p="task">任务调度</div>
+    <div class="tab" data-p="param">系统参数</div>
+    <div class="tab" data-p="audit">审计日志</div>
+  </div>
+  <div id="sys-panes">
+    <div class="tab-pane show" data-p="user">
+      <div style="display:grid;grid-template-columns:250px 1fr;gap:12px;align-items:start">
+        <div class="card">
+          <div class="card-head">角色</div>
+          <div class="card-body" style="padding:8px">
+            <div style="padding:9px 10px;border-radius:8px;cursor:pointer"><b style="font-size:12.5px">系统管理员</b><div class="hint" style="font-size:11px">全部权限 · 3 人</div></div>
+            <div style="padding:9px 10px;border-radius:8px;cursor:pointer"><b style="font-size:12.5px">数据管理员</b><div class="hint" style="font-size:11px">域维护 · 导入导出 · 6 人</div></div>
+            <div style="padding:9px 10px;border-radius:8px;background:var(--pl)"><b style="font-size:12.5px">数据治理岗</b><div class="hint" style="font-size:11px">审批 · 质量规则 · 模型 · 4 人</div></div>
+            <div style="padding:9px 10px;border-radius:8px;cursor:pointer"><b style="font-size:12.5px">业务申请员</b><div class="hint" style="font-size:11px">申请 · 查本人数据 · 25 人</div></div>
+            <div style="padding:9px 10px;border-radius:8px;cursor:pointer"><b style="font-size:12.5px">只读用户</b><div class="hint" style="font-size:11px">查询 · 敏感字段脱敏 · 4 人</div></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-head">用户列表（42）
+            <span class="flex" style="gap:8px">
+              <button class="btn sm" onclick="openLayer('md-matrix')"><svg class="ic"><use href="#ic-shield"/></svg>权限矩阵</button>
+              <button class="btn sm primary" onclick="toast('演示：新增用户（账号 / 部门 / 角色）')"><svg class="ic"><use href="#ic-plus"/></svg>新增用户</button>
+            </span>
+          </div>
+          <table class="tbl">
+            <thead><tr><th>用户</th><th>部门</th><th>角色</th><th>数据权限</th><th>状态</th><th>最近登录</th><th>操作</th></tr></thead>
+            <tbody>
+              <tr><td class="flex"><span class="avatar" style="width:24px;height:24px;font-size:11px">宋</span><b>宋明</b></td><td>信息部</td><td><span class="tag b">数据治理岗</span></td><td>全域</td><td><span class="tag g">启用</span></td><td class="muted">11-16 08:02</td><td><span class="link" onclick="toast('演示：编辑用户')">编辑</span></td></tr>
+              <tr><td class="flex"><span class="avatar" style="width:24px;height:24px;font-size:11px">张</span><b>张伟</b></td><td>制造部</td><td><span class="tag o">业务申请员</span></td><td>物料域 · 行级=本部门</td><td><span class="tag g">启用</span></td><td class="muted">11-16 09:10</td><td><span class="link" onclick="toast('演示：编辑用户')">编辑</span></td></tr>
+              <tr><td class="flex"><span class="avatar" style="width:24px;height:24px;font-size:11px">王</span><b>王芳</b></td><td>销售部</td><td><span class="tag o">业务申请员</span></td><td>客户域 · 行级=本部门</td><td><span class="tag g">启用</span></td><td class="muted">11-16 08:44</td><td><span class="link" onclick="toast('演示：编辑用户')">编辑</span></td></tr>
+              <tr><td class="flex"><span class="avatar" style="width:24px;height:24px;font-size:11px">李</span><b>李娜</b></td><td>采购部</td><td><span class="tag o">业务申请员</span></td><td>供应商域 · 行级=本部门</td><td><span class="tag g">启用</span></td><td class="muted">11-15 17:30</td><td><span class="link" onclick="toast('演示：编辑用户')">编辑</span></td></tr>
+              <tr><td class="flex"><span class="avatar" style="width:24px;height:24px;font-size:11px">刘</span><b>刘洋</b></td><td>财务部</td><td><span class="tag s">只读用户</span></td><td>客户/供应商 · 银行账号脱敏</td><td><span class="tag g">启用</span></td><td class="muted">11-14 10:20</td><td><span class="link" onclick="toast('演示：编辑用户')">编辑</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    <div class="tab-pane" data-p="task">
+      <div class="card">
+        <div class="card-head">定时任务<span><button class="btn sm primary" onclick="toast('演示：新建定时任务')"><svg class="ic"><use href="#ic-plus"/></svg>新建任务</button></span></div>
+        <table class="tbl">
+          <thead><tr><th>任务</th><th>类型</th><th>调度</th><th>上次执行</th><th>下次执行</th><th>平均耗时</th><th>启用</th><th>操作</th></tr></thead>
+          <tbody>
+            <tr><td><b>全域质量日检</b></td><td>质量检查</td><td class="muted">每日 02:00</td><td class="muted">11-16 02:00 · 成功</td><td class="muted">11-17 02:00</td><td class="num">6m12s</td><td><span class="sw on" onclick="sw(this)"></span></td><td><span class="link" onclick="toast('演示：立即执行')">执行</span><span class="link" onclick="toast('演示：查看执行日志')">日志</span></td></tr>
+            <tr><td><b>BI 全量同步</b></td><td>分发</td><td class="muted">每日 01:00</td><td class="muted">11-16 01:00 · 成功</td><td class="muted">11-17 01:00</td><td class="num">18m40s</td><td><span class="sw on" onclick="sw(this)"></span></td><td><span class="link" onclick="toast('演示：立即执行')">执行</span><span class="link" onclick="toast('演示：查看执行日志')">日志</span></td></tr>
+            <tr><td><b>CRM 变更推送重试</b></td><td>分发重试</td><td class="muted">每 5 分钟</td><td class="muted">11-16 08:45 · 成功</td><td class="muted">11-16 08:50</td><td class="num">3.2s</td><td><span class="sw on" onclick="sw(this)"></span></td><td><span class="link" onclick="toast('演示：立即执行')">执行</span><span class="link" onclick="toast('演示：查看执行日志')">日志</span></td></tr>
+            <tr><td><b>供应商证照周检</b></td><td>质量检查</td><td class="muted">每周一 03:00</td><td class="muted">11-16 03:00 · 成功</td><td class="muted">11-23 03:00</td><td class="num">52s</td><td><span class="sw on" onclick="sw(this)"></span></td><td><span class="link" onclick="toast('演示：立即执行')">执行</span><span class="link" onclick="toast('演示：查看执行日志')">日志</span></td></tr>
+            <tr><td><b>数据库备份</b></td><td>系统</td><td class="muted">每日 04:00</td><td class="muted">11-16 04:00 · 成功</td><td class="muted">11-17 04:00</td><td class="num">11m05s</td><td><span class="sw on" onclick="sw(this)"></span></td><td><span class="link" onclick="toast('演示：立即执行')">执行</span><span class="link" onclick="toast('演示：查看执行日志')">日志</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="tab-pane" data-p="param">
+      <div class="card" style="max-width:640px">
+        <div class="card-head">系统参数</div>
+        <div class="card-body">
+          <div class="grid-form">
+            <div class="form-item"><label>会话超时（分钟）</label><input type="number" value="30"></div>
+            <div class="form-item"><label>密码最小长度</label><input type="number" value="8"></div>
+            <div class="form-item"><label>密码有效期（天）</label><input type="number" value="90"></div>
+            <div class="form-item"><label>列表分页大小</label><select><option>10</option><option selected>20</option><option>50</option><option>100</option></select></div>
+            <div class="form-item"><label>导入单次上限（行）</label><input type="number" value="100000"></div>
+            <div class="form-item"><label>归档保留（年）</label><input type="number" value="3"></div>
+          </div>
+          <div class="form-item"><label>失败重试策略</label><input type="text" value="10s / 1min / 10min / 1h · 共 4 次"></div>
+          <button class="btn primary" onclick="toast('系统参数已保存并即时生效（演示）')">保存</button>
+        </div>
+      </div>
+    </div>
+    <div class="tab-pane" data-p="audit">
+      <div class="card">
+        <div class="card-head">审计日志
+          <span class="fbar" style="margin:0">
+            <select><option>全部模块</option><option>主数据维护</option><option>模型管理</option><option>审批中心</option><option>系统管理</option></select>
+            <select><option>全部操作</option><option>登录</option><option>新增</option><option>修改</option><option>导出</option><option>审批</option></select>
+            <button class="btn sm" onclick="toast('演示：按条件查询')">查询</button>
+            <button class="btn sm" onclick="toast('审计日志已导出（演示）')"><svg class="ic"><use href="#ic-dl"/></svg>导出</button>
+          </span>
+        </div>
+        <table class="tbl">
+          <thead><tr><th>时间</th><th>用户</th><th>IP</th><th>模块</th><th>操作</th><th>对象</th><th>结果</th></tr></thead>
+          <tbody>
+            <tr><td class="muted">11-16 08:44:12</td><td>王芳</td><td class="muted">10.20.3.15</td><td>主数据维护</td><td>提交变更申请</td><td>KH20260205-0007</td><td><span class="tag g">成功</span></td></tr>
+            <tr><td class="muted">11-16 08:42:57</td><td>宋明</td><td class="muted">10.20.1.8</td><td>审批中心</td><td>通过审批</td><td>SP202611150002</td><td><span class="tag g">成功</span></td></tr>
+            <tr><td class="muted">11-16 08:30:05</td><td>系统</td><td class="muted">—</td><td>数据集成</td><td>变更推送</td><td>CRM · KH20260205-0007</td><td><span class="tag g">成功</span></td></tr>
+            <tr><td class="muted">11-16 08:12:44</td><td>系统</td><td class="muted">—</td><td>数据集成</td><td>变更推送（自动重试中）</td><td>MES · WL20260102-0001</td><td><span class="tag r">失败</span></td></tr>
+            <tr><td class="muted">11-15 17:31:20</td><td>李娜</td><td class="muted">10.20.4.22</td><td>主数据维护</td><td>批量导出</td><td>供应商 · 96,120 条</td><td><span class="tag g">成功</span></td></tr>
+            <tr><td class="muted">11-15 16:48:03</td><td>宋明</td><td class="muted">10.20.1.8</td><td>数据标准</td><td>修改码表</td><td>计量单位 · 停用 PC</td><td><span class="tag g">成功</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="layer" id="md-matrix">
+  <div class="l-mask" onclick="closeLayer('md-matrix')"></div>
+  <div class="modal-center"><div class="m-box w840">
+    <div class="m-title">功能权限矩阵 · 数据治理岗<span class="x" style="cursor:pointer;color:var(--mut)" onclick="closeLayer('md-matrix')">×</span></div>
+    <div class="m-body">
+      <table class="tbl">
+        <thead><tr><th>功能模块</th><th>查看</th><th>新增</th><th>编辑</th><th>删除</th><th>审批</th><th>导出</th></tr></thead>
+        <tbody>
+          <tr><td><b>主数据维护</b></td><td><input type="checkbox" checked></td><td><input type="checkbox" checked></td><td><input type="checkbox" checked></td><td></td><td><input type="checkbox" checked></td><td><input type="checkbox" checked></td></tr>
+          <tr><td><b>模型管理</b></td><td><input type="checkbox" checked></td><td><input type="checkbox" checked></td><td><input type="checkbox" checked></td><td></td><td><input type="checkbox" checked></td><td></td></tr>
+          <tr><td><b>数据标准</b></td><td><input type="checkbox" checked></td><td><input type="checkbox" checked></td><td><input type="checkbox" checked></td><td></td><td><input type="checkbox" checked></td><td></td></tr>
+          <tr><td><b>数据质量</b></td><td><input type="checkbox" checked></td><td><input type="checkbox" checked></td><td><input type="checkbox" checked></td><td><input type="checkbox" checked></td><td></td><td><input type="checkbox" checked></td></tr>
+          <tr><td><b>数据集成</b></td><td><input type="checkbox" checked></td><td></td><td><input type="checkbox" checked></td><td></td><td></td><td><input type="checkbox" checked></td></tr>
+          <tr><td><b>数据工作流</b></td><td><input type="checkbox" checked></td><td><input type="checkbox" checked></td><td><input type="checkbox" checked></td><td></td><td></td><td></td></tr>
+          <tr><td><b>审批中心</b></td><td><input type="checkbox" checked></td><td></td><td></td><td></td><td><input type="checkbox" checked></td><td></td></tr>
+          <tr><td><b>系统管理</b></td><td><input type="checkbox" checked></td><td></td><td></td><td></td><td></td><td></td></tr>
+        </tbody>
+      </table>
+      <div class="hint mt10"><svg class="ic"><use href="#ic-shield"/></svg> 数据权限在角色上叠加：域级 + 行级（组织/条件）+ 字段级（隐藏 / 脱敏）</div>
+    </div>
+    <div class="m-foot">
+      <button class="btn" onclick="closeLayer('md-matrix')">取消</button>
+      <button class="btn primary" onclick="closeLayer('md-matrix');toast('权限矩阵已保存并即时生效（演示）')">保存</button>
+    </div>
+  </div></div>
+</div>
+</section>
+    </main>
+  </div>
+</div>
+<div id="toasts"></div>
+<script>
+'use strict';
+function E(id){return document.getElementById(id)}
+function fmtN(n){return n.toLocaleString('en-US')}
+function axDef(v){return v>=10000?Math.round(v/10000)+'万':fmtN(Math.round(v))}
+function toast(msg,type){
+  var w=E('toasts'),d=document.createElement('div');
+  d.className='toast'+(type==='err'?' err':'');d.textContent=msg;w.appendChild(d);
+  requestAnimationFrame(function(){d.classList.add('on')});
+  setTimeout(function(){d.classList.remove('on');setTimeout(function(){d.remove()},320)},2800);
+}
+function openLayer(id){E(id).classList.add('show')}
+function closeLayer(id){E(id).classList.remove('show')}
+function toggleNotes(id){
+  var el=E(id),show=!el.classList.contains('show');
+  document.querySelectorAll('.notes-pop').forEach(function(p){p.classList.remove('show')});
+  if(show)el.classList.add('show');
+}
+function sw(el){el.classList.toggle('on');toast(el.classList.contains('on')?'任务已启用':'任务已暂停')}
+
+/* ===== 导航 ===== */
+function go(id){
+  document.querySelectorAll('.screen').forEach(function(s){s.classList.toggle('active',s.id==='s-'+id)});
+  document.querySelectorAll('.nav-item').forEach(function(n){n.classList.toggle('active',n.dataset.s===id)});
+  document.querySelector('.app').classList.toggle('pbi',id==='dashboard');
+  E('main').scrollTop=0;
+  if(id==='workflow')wfBuild();
+  if(id==='dashboard')dashRender();
+}
+
+/* ===== 通用 Tabs ===== */
+document.addEventListener('click',function(e){
+  var t=e.target.closest('.tabs .tab[data-p]');
+  if(!t)return;
+  var tabs=t.closest('.tabs'),panes=document.querySelector(tabs.dataset.panes);
+  if(!panes)return;
+  tabs.querySelectorAll('.tab').forEach(function(x){x.classList.toggle('active',x===t)});
+  panes.querySelectorAll(':scope > .tab-pane').forEach(function(p){p.classList.toggle('show',p.dataset.p===t.dataset.p)});
+});
+document.addEventListener('click',function(e){
+  if(!e.target.closest('.vmenu')&&!e.target.closest('.vm-btn')){var v=E('vmenu');if(v)v.classList.remove('show')}
+  if(!e.target.closest('.notes-pop')&&!e.target.closest('.notes-btn')){document.querySelectorAll('.notes-pop').forEach(function(p){p.classList.remove('show')})}
+});
+
+/* ===== 主数据维护 ===== */
+var STATMAP={'已发布':'g','待审核':'o','变更中':'b','已冻结':'p','已归档':'s','草稿':'s'};
+function tag(st){return '<span class="tag '+(STATMAP[st]||'s')+'">'+st+'</span>'}
+var DOMS={
+  material:{total:'520,340',rows:[
+    ['WL20260102-0001','六角螺栓','M8×30 · GB/T 5783','紧固件/螺栓','个','已发布'],
+    ['WL20260102-0002','深沟球轴承','6204-2Z','轴承件/球轴承','套','已发布'],
+    ['WL20260105-0007','不锈钢板','304 δ3.0','原材料/板材','kg','已发布'],
+    ['WL20260112-0015','铝合金型材','6063-T5','原材料/型材','kg','变更中'],
+    ['WL20260118-0022','密封圈','NBR 35×4×5','标准件/密封件','个','已发布'],
+    ['WL20260203-0004','减速机','RV063-10-WD','传动件/减速机','台','待审核'],
+    ['WL20260210-0009','接近开关','E2E-X5ME1','电气件/传感器','个','已发布'],
+    ['WL20260215-0013','碳钢焊丝','ER50-6 Φ1.2','耗材/焊接材料','kg','已发布'],
+    ['WL20260301-0006','液压油滤芯','HX-40×10Q','液压件/滤芯','个','已冻结'],
+    ['WL20260308-0018','平键','A型 8×7×25','标准件/键','个','已发布']],
+    cols:['物料编码','物料名称','规格型号','物料分类','计量单位','状态']},
+  customer:{total:'310,256',rows:[
+    ['KH20260103-0001','华东精密机械制造有限公司','通用设备制造','华东','91310000MA1FL2**XX','已发布'],
+    ['KH20260110-0004','上海临港新能源科技有限公司','电气机械制造','华东','91310000MA1K8P**XX','已发布'],
+    ['KH20260118-0002','深圳市智联自动化设备有限公司','仪器仪表制造','华南','91440300MA5EE2**XX','已发布'],
+    ['KH20260205-0007','苏州汇川联合动力系统股份有限公司','汽车零部件','华东','91320000MA1MXK**XX','变更中'],
+    ['KH20260212-0003','北京中科算力信息技术有限公司','软件和信息服务','华北','91110100MA01W6**XX','待审核'],
+    ['KH20260301-0009','广州明珞装备股份有限公司','专用设备制造','华南','91440101MA59C4**XX','已发布']],
+    cols:['客户编码','客户名称','行业','区域','统一社会信用代码','状态']},
+  supplier:{total:'96,120',rows:[
+    ['GYS20260105-0001','江苏恒力传动科技有限公司','正常合作','2024-03-12','91320000MA1T93**XX','已发布'],
+    ['GYS20260115-0003','东莞市精工密封件有限公司','正常合作','2023-08-01','91441900MA4W87**XX','已发布'],
+    ['GYS20260208-0002','宁波拓普集团股份有限公司','战略合作','2022-05-18','91330200MA283K**XX','已发布'],
+    ['GYS20260220-0006','青岛海纳重工有限公司','观察期','2025-06-30','91370200MA3QK2**XX','已冻结'],
+    ['GYS20260310-0004','武汉光谷激光科技有限公司','拟准入','2026-11-02','91420100MA4LQ8**XX','待审核'],
+    ['GYS20260315-0008','杭州沃德汽车部件有限公司','正常合作','2024-11-20','91330100MA2GXW**XX','已发布']],
+    cols:['供应商编码','供应商名称','合作状态','准入日期','统一社会信用代码','状态']}
+};
+function renderDom(k){
+  var d=DOMS[k];
+  document.querySelectorAll('#dm-tabs .tab').forEach(function(t){t.classList.toggle('active',t.dataset.k===k)});
+  E('dm-total').textContent=d.total;
+  E('dm-thead').innerHTML='<tr>'+d.cols.map(function(c){return '<th>'+c+'</th>'}).join('')+'<th style="width:150px">操作</th></tr>';
+  E('dm-tbody').innerHTML=d.rows.map(function(r){
+    return '<tr><td><b>'+r[0]+'</b></td>'+r.slice(1,r.length-1).map(function(v){return '<td>'+v+'</td>'}).join('')+
+      '<td>'+tag(r[r.length-1])+'</td><td><span class="link" onclick="openLayer(\'dw-his\')">变更历史</span><span class="link" onclick="toast(\'演示：发起变更（走变更审批）\')">变更</span><span class="link" onclick="toast(\'演示：冻结后下游停止分发该记录\')">冻结</span></td></tr>';
+  }).join('');
+}
+function dmSubmit(){closeLayer('dw-add');openLayer('md-dup')}
+function dmForce(){closeLayer('md-dup');toast('已提交审批 SP2026111600xx：等待部门初审（演示）')}
+
+/* 导入向导 */
+var wzStep=1;
+function wzGo(n){
+  wzStep=Math.max(1,Math.min(3,n));
+  E('wz-steps').querySelectorAll('.step').forEach(function(s,i){s.classList.toggle('on',i===wzStep-1);s.classList.toggle('done',i<wzStep-1)});
+  document.querySelectorAll('#md-import .wz-pane').forEach(function(p){p.classList.toggle('show',+p.dataset.p===wzStep)});
+  E('wz-prev').style.display=wzStep===1?'none':'';
+  E('wz-next').style.display=wzStep===3?'none':'';
+  E('wz-dl').style.display=wzStep===3?'':'none';
+  E('wz-imp').style.display=wzStep===3?'':'none';
+}
+function wzImport(){
+  E('wz-run').style.display='block';
+  var bar=E('wz-bar'),pct=E('wz-pct'),p=0;
+  var t=setInterval(function(){
+    p+=Math.random()*14+6;
+    if(p>=100){p=100;clearInterval(t);
+      setTimeout(function(){closeLayer('md-import');wzGo(1);bar.style.width='0';E('wz-run').style.display='none';toast('导入完成：成功 9,876 行已进入批量审批 · 失败 124 行已生成错误清单')},420);
+    }
+    bar.style.width=p+'%';pct.textContent=Math.round(p)+'%';
+  },260);
+}
+
+/* ===== 审批 ===== */
+function apPass(id){var el=E(id);if(el)el.style.display='none';closeLayer('dw-ap');toast('审批通过：已流转至下一环节（终审通过后自动编码发布并推送订阅方）')}
+function apReject(){closeLayer('dw-ap');toast('已驳回至发起人修改','err')}
+
+/* ===== SVG 图表引擎 ===== */
+function svgLine(el,series,labels,opt){
+  opt=opt||{};var w=opt.w||440,h=opt.h||212,color=opt.color||'#2563eb';
+  var fmt=opt.axis||axDef;
+  var pad={l:46,r:14,t:14,b:26},iw=w-pad.l-pad.r,ih=h-pad.t-pad.b;
+  var max=Math.max.apply(null,series)*1.15||1;
+  var g='';
+  for(var i=0;i<=3;i++){var y=pad.t+ih*i/3,v=max*(1-i/3);
+    g+='<line x1="'+pad.l+'" y1="'+y.toFixed(1)+'" x2="'+(w-pad.r)+'" y2="'+y.toFixed(1)+'" stroke="#e5e7eb"/>'+
+       '<text x="'+(pad.l-6)+'" y="'+(y+3.5).toFixed(1)+'" text-anchor="end" font-size="10" fill="#8a8886">'+fmt(v)+'</text>';}
+  var pts=series.map(function(v2,i2){return [pad.l+iw*i2/(series.length-1),pad.t+ih*(1-v2/max)]});
+  var path=pts.map(function(p,i){return (i?'L':'M')+p[0].toFixed(1)+' '+p[1].toFixed(1)}).join(' ');
+  var area=path+' L '+pts[pts.length-1][0].toFixed(1)+' '+(pad.t+ih)+' L '+pts[0][0].toFixed(1)+' '+(pad.t+ih)+' Z';
+  var dots=pts.map(function(p,i){return '<circle cx="'+p[0].toFixed(1)+'" cy="'+p[1].toFixed(1)+'" r="2.8" fill="#fff" stroke="'+color+'" stroke-width="1.7"><title>'+labels[i]+'：'+fmtN(series[i])+'</title></circle>'}).join('');
+  var lbls=labels.map(function(l,i){return l?'<text x="'+(pad.l+iw*i/(labels.length-1)).toFixed(1)+'" y="'+(h-6)+'" text-anchor="middle" font-size="10" fill="#8a8886">'+l+'</text>':''}).join('');
+  el.innerHTML='<svg viewBox="0 0 '+w+' '+h+'" style="width:100%;height:auto;display:block"><path d="'+area+'" fill="'+color+'14"/><path d="'+path+'" fill="none" stroke="'+color+'" stroke-width="2.2"/>'+dots+lbls+'</svg>';
+}
+function svgBar(el,data,opt){
+  opt=opt||{};var w=opt.w||440,h=opt.h||212,hl=opt.hl==null?-1:opt.hl;
+  var fmt=opt.axis||axDef;
+  var pad={l:52,r:12,t:14,b:28},iw=w-pad.l-pad.r,ih=h-pad.t-pad.b;
+  var max=Math.max.apply(null,data.map(function(d){return d.v}))*1.12||1;
+  var g='';
+  for(var i=0;i<=3;i++){var y=pad.t+ih*i/3,v=max*(1-i/3);
+    g+='<line x1="'+pad.l+'" y1="'+y.toFixed(1)+'" x2="'+(w-pad.r)+'" y2="'+y.toFixed(1)+'" stroke="#e5e7eb"/>'+
+       '<text x="'+(pad.l-6)+'" y="'+(y+3.5).toFixed(1)+'" text-anchor="end" font-size="10" fill="#8a8886">'+fmt(v)+'</text>';}
+  var bars='';
+  data.forEach(function(d,i){
+    var cx=pad.l+iw*(i+0.5)/data.length,bw=Math.min(40,iw/data.length*0.52);
+    var bh=ih*d.v/max,by=pad.t+ih-bh,sel=i===hl;
+    bars+='<rect class="bar" data-i="'+i+'" x="'+(cx-bw/2).toFixed(1)+'" y="'+by.toFixed(1)+'" width="'+bw.toFixed(1)+'" height="'+Math.max(bh,1).toFixed(1)+'" rx="2" fill="'+(sel?'#2563eb':'#a8c7fa')+'" style="cursor:pointer"><title>'+d.n+'：'+fmtN(d.v)+'　（单击筛选，双击下钻）</title></rect>'+
+      '<text x="'+cx.toFixed(1)+'" y="'+(h-8)+'" text-anchor="middle" font-size="11" fill="'+(sel?'#1d4ed8':'#605e5c')+'" font-weight="'+(sel?600:400)+'">'+d.n+'</text>';
+  });
+  el.innerHTML='<svg viewBox="0 0 '+w+' '+h+'" style="width:100%;height:auto;display:block">'+g+bars+'</svg>';
+  if(opt.onSel){
+    el.querySelectorAll('.bar').forEach(function(b){
+      b.addEventListener('click',function(){opt.onSel(+b.dataset.i)});
+      if(opt.onDbl)b.addEventListener('dblclick',function(){opt.onDbl()});
+    });
+  }
+}
+var DCOLS=['#2563eb','#f59e0b','#7c3aed','#94a3b8'];
+function svgDonut(el,parts,opt){
+  opt=opt||{};var w=opt.w||280,h=opt.h||200;
+  var cx=w/2,cy=(h-26)/2,r=52,C=2*Math.PI*r,off=0,segs='';
+  parts.forEach(function(p,i){
+    var len=C*p.v/100;
+    segs+='<circle cx="'+cx+'" cy="'+cy+'" r="'+r+'" fill="none" stroke="'+DCOLS[i%4]+'" stroke-width="24" stroke-dasharray="'+Math.max(len-2,0).toFixed(1)+' '+(C-len+2).toFixed(1)+'" stroke-dashoffset="'+(-off).toFixed(1)+'" transform="rotate(-90 '+cx+' '+cy+')" style="cursor:pointer"><title>'+p.n+'：'+p.v+'%</title></circle>';
+    off+=len;
+  });
+  var legend='<div class="dlegend">'+parts.map(function(p,i){return '<span><i style="background:'+DCOLS[i%4]+'"></i>'+p.n+' <b class="num">'+p.v+'%</b></span>'}).join('')+'</div>';
+  el.innerHTML='<svg viewBox="0 0 '+w+' '+(h-26)+'" style="width:100%;height:auto;display:block">'+segs+
+    '<text x="'+cx+'" y="'+(cy+4)+'" text-anchor="middle" font-size="16" font-weight="700" fill="#252423">'+parts[0].v+'%</text>'+
+    '<text x="'+cx+'" y="'+(cy+20)+'" text-anchor="middle" font-size="10" fill="#8a8886">'+parts[0].n+'</text></svg>'+legend;
+}
+
+/* ===== 治理仪表板（Power BI） ===== */
+var DDOMS=[
+  {k:'material',n:'物料',t:520340,m:2140,q:95.1,st:[86.2,4.1,5.0,4.7],sub:[{n:'原材料',v:142380},{n:'半成品',v:89210},{n:'成品',v:254300},{n:'辅料',v:34450}]},
+  {k:'customer',n:'客户',t:310256,m:862,q:93.4,st:[88.1,2.6,4.4,4.9]},
+  {k:'supplier',n:'供应商',t:96120,m:214,q:91.8,st:[84.5,5.2,6.1,4.2]},
+  {k:'employee',n:'员工',t:45218,m:118,q:97.2,st:[93.8,2.2,2.0,2.0]},
+  {k:'org',n:'组织机构',t:8436,m:6,q:98.9,st:[96.0,1.5,1.0,1.5]}
+];
+var DALL_ST=[87.6,3.1,4.2,5.1];
+var DALL_T=DDOMS.reduce(function(s,d){return s+d.t},0);
+var DALL_M=DDOMS.reduce(function(s,d){return s+d.m},0);
+var DMONTHS=['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
+var DMLINE={2026:[6200,5800,7100,6900,7300,8100,7800,8400,9100,8600,8900,8432],2025:[5200,5600,6000,5800,6300,6800,7100,6900,7400,7800,7600,8200],2024:[4100,4400,4800,4600,5100,5600,5900,5700,6200,6600,6400,7000]};
+var dashState={sel:-1,year:2026,drill:false};
+function dashRender(){
+  var sel=dashState.sel,d=sel>=0?DDOMS[sel]:null;
+  var tot=d?d.t:DALL_T,mon=d?d.m:DALL_M,st=d?d.st:DALL_ST,q=d?d.q:94.2;
+  E('dk1').textContent=fmtN(tot);E('dk1d').textContent=d?('占全域 '+(100*d.t/DALL_T).toFixed(1)+'%'):'较上月 +2.3%';
+  E('dk2').textContent=fmtN(mon);E('dk2d').textContent='环比 +18.6%';
+  E('dk3').textContent=st[0].toFixed(1)+'%';E('dk3d').textContent='目标 ≥ 85%';
+  E('dk4').textContent=q.toFixed(1);E('dk4d').textContent='较上月 +0.6';
+  if(!dashState.drill){
+    svgBar(E('d-bar'),DDOMS.map(function(x){return {n:x.n,v:x.t}}),{hl:sel,onSel:function(i){
+      dashState.sel=(dashState.sel===i?-1:i);
+      if(dashState.sel<0)dashState.drill=false;
+      dashRender();
+    },onDbl:dashDrill});
+    E('d-bar-title').innerHTML='各主数据域数据量';
+  }
+  var base=DMLINE[dashState.year];
+  var series=d?base.map(function(v){return Math.max(1,Math.round(v*d.t/DALL_T))}):base;
+  svgLine(E('d-line'),series,DMONTHS,{});
+  E('d-line-title').textContent=(d?d.n+' · ':'')+'月度新增趋势（'+dashState.year+'）';
+  svgDonut(E('d-donut'),[{n:'已发布',v:st[0]},{n:'变更中',v:st[1]},{n:'已冻结',v:st[2]},{n:'已归档',v:st[3]}]);
+  E('d-table').innerHTML='<thead><tr><th>主数据域</th><th>数据总量</th><th>本月新增</th><th>质量评分</th><th>已发布占比</th><th>最近分发</th></tr></thead><tbody>'+
+    DDOMS.map(function(x,i){return '<tr'+(i===sel?' style="background:#eff6ff"':'')+'><td><b>'+x.n+'</b></td><td class="num">'+fmtN(x.t)+'</td><td class="num">+'+fmtN(x.m)+'</td><td>'+x.q.toFixed(1)+'</td><td>'+x.st[0].toFixed(1)+'%</td><td class="muted">11-16</td></tr>'}).join('')+'</tbody>';
+  E('d-chip').style.display=sel>=0?'inline-flex':'none';
+  if(sel>=0)E('d-chip-name').textContent=d.n;
+  E('df-dom').textContent=sel>=0?d.n:'全部';
+  E('df-dom-x').style.display=sel>=0?'inline':'none';
+  E('df-year').textContent='是 '+dashState.year;
+}
+function dYear(y){
+  dashState.year=y;
+  document.querySelectorAll('#s-year .s-btn').forEach(function(b){b.classList.toggle('on',+b.dataset.y===y)});
+  dashRender();toast('切片器：年度 = '+y);
+}
+function dClear(){dashState.sel=-1;dashState.drill=false;dashRender()}
+function dashDrill(){
+  if(dashState.drill){dashDrillOut();return}
+  if(dashState.sel<0){toast('请先单击柱图选中主数据域，再双击下钻','err');return}
+  var d=DDOMS[dashState.sel];
+  if(!d.sub){toast('「'+d.n+'」无下级层级，演示仅「物料」支持下钻','err');return}
+  dashState.drill=true;
+  svgBar(E('d-bar'),d.sub,{hl:-1});
+  E('d-bar-title').innerHTML='物料 · 分类明细 <span class="link" style="font-size:11px" onclick="dashDrillOut()">返回上级</span>';
+  toast('已下钻至「物料」分类层级');
+}
+function dashDrillOut(){dashState.drill=false;dashRender()}
+function pbiView(edit){
+  E('vmenu').classList.remove('show');
+  document.querySelector('.app').classList.toggle('pbi-read',!edit);
+  E('vm-chk-r').style.visibility=edit?'hidden':'visible';
+  E('vm-chk-e').style.visibility=edit?'visible':'hidden';
+  toast(edit?'已切换到编辑视图：可使用右侧面板设计可视化':'已切换到阅读视图：可查看与交叉筛选');
+}
+function ppTab(t,id){
+  t.parentElement.querySelectorAll('.pp-tab').forEach(function(x){x.classList.toggle('active',x===t)});
+  ['pp-viz','pp-flt','pp-fld'].forEach(function(i){E(i).classList.toggle('on',i===id)});
+}
+function ctSel(t){t.parentElement.querySelectorAll('.ctype').forEach(function(x){x.classList.toggle('on',x===t)})}
+function fldSel(t){var c=t.querySelector('input');if(c)c.checked=!c.checked}
+function vSel(el){
+  document.querySelectorAll('#s-dashboard .visual,#s-dashboard .v-kpi').forEach(function(v){v.classList.remove('sel')});
+  el.classList.add('sel');
+  var t=el.querySelector('.v-title');
+  E('pp-vo-hint').textContent=t?('已选择可视化：「'+t.textContent+'」— 此处显示该视觉对象的筛选器。'):'已选择可视化（卡片）。';
+}
+var PGNAMES={1:'主数据资产总览',2:'数据质量评分卡',3:'集成监控'};
+function pbiPage(p,btn){
+  document.querySelectorAll('.pbi-page').forEach(function(x){x.classList.toggle('show',x.dataset.p===p)});
+  document.querySelectorAll('.pg').forEach(function(x){x.classList.toggle('active',x===btn)});
+  E('pbi-pgname').textContent=PGNAMES[p];
+  E('pbi-pgno').textContent=p;
+}
+
+/* ===== 数据工作流（Alteryx） ===== */
+var TOOLBOX=[
+  ['输入',[['ic-db','数据库输入'],['ic-excel','Excel/CSV 输入'],['ic-md','主数据输入'],['ic-txt','文本输入']]],
+  ['准备',[['ic-filter','过滤'],['ic-cols','字段选择'],['ic-fx','公式'],['ic-unique','去重'],['ic-sort','排序'],['ic-sample','采样'],['ic-merge','多字段合并']]],
+  ['转换',[['ic-sum','汇总'],['ic-cross','交叉表'],['ic-transp','转置'],['ic-record','记录生成']]],
+  ['关联',[['ic-join','Join 关联'],['ic-union','并集'],['ic-fuzzy','模糊匹配'],['ic-append','追加行']]],
+  ['清洗',[['ic-map','码值映射'],['ic-broom','标准化'],['ic-fill','空值填充']]],
+  ['输出',[['ic-out','写入主数据'],['ic-db','数据库输出'],['ic-excel','Excel 输出']]],
+  ['浏览',[['ic-browse','浏览器']]]
+];
+var WF_NODES=[
+  {id:'n1',x:30,y:46,icon:'ic-md',label:'主数据输入',sub:'物料存量 25,481'},
+  {id:'n2',x:250,y:46,icon:'ic-map',label:'码值映射'},
+  {id:'n3',x:470,y:46,icon:'ic-filter',label:'过滤',sub:'有效状态'},
+  {id:'n4',x:690,y:46,icon:'ic-unique',label:'去重'},
+  {id:'n6',x:690,y:186,icon:'ic-browse',label:'浏览器'},
+  {id:'n5',x:920,y:46,icon:'ic-out',label:'写入主数据'}
+];
+var WF_EDGES=[['n1','n2'],['n2','n3'],['n3','n4'],['n4','n5'],['n4','n6']];
+var WF_CFG={
+  n1:'<div class="kv"><b>主数据域</b><span>物料（存量）</span></div><div class="kv"><b>读取范围</b><span>全部状态 · 25,481 行</span></div><div class="kv"><b>输出字段</b><span>7 个（编码/名称/规格/分类/单位/属性/状态）</span></div><button class="btn sm mt10" onclick="wfResults(\'n1\')">预览输出数据</button>',
+  n2:'<div class="kv"><b>应用码表</b><span>计量单位</span></div><table class="tbl" style="margin-top:8px"><thead><tr><th>源值</th><th>标准值</th></tr></thead><tbody><tr><td>只 / PCS</td><td><b>个 (EA)</b></td></tr><tr><td>公斤</td><td><b>千克 (kg)</b></td></tr><tr><td>公尺</td><td><b>米 (m)</b></td></tr></tbody></table><div class="hint mt10">未匹配的值进入异常输出（3 行）</div><button class="btn sm mt10" onclick="wfResults(\'n2\')">预览输出数据</button>',
+  n3:'<div class="form-item"><label>过滤条件（表达式）</label><textarea rows="3">[状态] == "已发布" OR [状态] == "变更中"</textarea></div><div class="hint">命中 24,316 / 25,481 行（95.4%）</div><button class="btn sm mt10" onclick="wfResults(\'n3\')">预览输出数据</button>',
+  n4:'<div class="kv"><b>匹配字段</b><span>物料名称 + 规格型号</span></div><div class="kv"><b>相似度阈值</b><span>≥ 0.90</span></div><div class="kv"><b>冲突策略</b><span>保留最早创建的记录</span></div><div class="hint mt10">预计去除重复 184 行</div><button class="btn sm mt10" onclick="wfResults(\'n4\')">预览输出数据</button>',
+  n6:'<div class="hint">浏览器节点：查看上游「去重」节点的输出快照（数据 / 元数据 / 消息）。</div><button class="btn sm mt10" onclick="wfResults(\'n4\')">查看数据</button>',
+  n5:'<div class="form-item"><label>目标域</label><select><option>物料主数据</option></select></div><div class="form-item"><label>写入模式</label><div class="radio-row"><label><input type="radio" name="wfmode" checked> 走审批流程（推荐）</label><label><input type="radio" name="wfmode"> 直接发布</label></div></div><div class="form-item"><label>冲突策略</label><select><option>按物料编码存在则更新</option><option>跳过已存在</option></select></div><div class="hint">预计写入 24,132 行（含更新）</div>'
+};
+var WFDATA={head:['物料编码','物料名称','规格型号','物料分类','计量单位','状态'],rows:[
+  ['WL20260102-0001','六角螺栓','M8×30 · GB/T 5783','紧固件/螺栓','个','已发布'],
+  ['WL20260102-0002','深沟球轴承','6204-2Z','轴承件/球轴承','套','已发布'],
+  ['WL20260105-0007','不锈钢板','304 δ3.0','原材料/板材','kg','已发布'],
+  ['WL20260118-0022','密封圈','NBR 35×4×5','标准件/密封件','个','已发布'],
+  ['WL20260203-0004','减速机','RV063-10-WD','传动件/减速机','台','待审核'],
+  ['WL20260210-0009','接近开关','E2E-X5ME1','电气件/传感器','个','已发布'],
+  ['WL20260215-0013','碳钢焊丝','ER50-6 Φ1.2','耗材/焊接材料','kg','已发布'],
+  ['WL20260308-0018','平键','A型 8×7×25','标准件/键','个','已发布']]};
+var WFMETA=[['material_code','字符串','0%'],['material_name','字符串','0%'],['spec','字符串','0%'],['category','字符串','0%'],['unit','字符串','0%'],['status','字符串','0%']];
+var wfBuilt=false,wfSeq=0,wfTimers=[],wfRunning=false;
+function wfBuild(){
+  if(wfBuilt){wfLayout();return}
+  wfBuilt=true;
+  E('wf-toolbox').innerHTML=TOOLBOX.map(function(g){
+    return '<div class="grp"><div class="grp-h" onclick="this.parentElement.classList.toggle(\'closed\')">'+g[0]+
+      '<svg class="ic" style="width:12px;height:12px"><use href="#ic-chev-d"/></svg></div><div class="grp-items">'+
+      g[1].map(function(it){return '<div class="tool" onclick="wfAdd(\''+it[0]+'\',\''+it[1]+'\')"><div class="t-ico"><svg><use href="#'+it[0]+'"/></svg></div><div class="t-lb">'+it[1]+'</div></div>'}).join('')+
+      '</div></div>';
+  }).join('');
+  WF_NODES.forEach(function(n){wfMount(n)});
+  wfLayout();
+}
+function wfMount(n){
+  var d=document.createElement('div');
+  d.className='wf-node';d.id=n.id;
+  d.style.left=n.x+'px';d.style.top=n.y+'px';
+  d.innerHTML='<div class="port in"></div><div class="port out"></div><div class="n-ico"><svg class="ic" style="width:18px;height:18px"><use href="#'+n.icon+'"/></svg></div><div class="n-t" style="flex:1;min-width:0"><div class="n-lb">'+n.label+'</div>'+(n.sub?'<div class="n-sub">'+n.sub+'</div>':'')+'</div><span class="n-check"><svg class="ic"><use href="#ic-check"/></svg></span>';
+  d.addEventListener('mousedown',function(e){wfDrag(e,n)});
+  d.addEventListener('click',function(e){e.stopPropagation();wfSelect(n)});
+  E('wf-cv').appendChild(d);
+}
+function wfLayout(){
+  var svg=E('wf-svg');if(!svg)return;
+  svg.setAttribute('viewBox','0 0 1140 440');
+  svg.style.width='1140px';svg.style.height='440px';
+  svg.innerHTML='<defs><marker id="warr" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 L8 4 L0 8 Z" fill="#94a3b8"/></marker></defs>';
+  var NS='http://www.w3.org/2000/svg';
+  WF_EDGES.forEach(function(ed){
+    var A=document.getElementById(ed[0]),B=document.getElementById(ed[1]);
+    if(!A||!B)return;
+    var x1=A.offsetLeft+150,y1=A.offsetTop+23,x2=B.offsetLeft,y2=B.offsetTop+23;
+    var p=document.createElementNS(NS,'path');
+    p.setAttribute('d','M '+x1+' '+y1+' C '+(x1+48)+' '+y1+', '+(x2-48)+' '+y2+', '+(x2-2)+' '+y2);
+    p.setAttribute('class','wf-edge');
+    p.setAttribute('marker-end','url(#warr)');
+    p.dataset.f=ed[0];
+    svg.appendChild(p);
+  });
+}
+function wfDrag(e,n){
+  if(e.button!==0)return;
+  var cv=E('wf-cv'),r=cv.getBoundingClientRect(),el=document.getElementById(n.id);
+  var ox=e.clientX-r.left-n.x,oy=e.clientY-r.top-n.y;
+  el.style.zIndex=10;
+  var mv=function(ev){
+    n.x=Math.max(0,ev.clientX-r.left-ox);n.y=Math.max(0,ev.clientY-r.top-oy);
+    el.style.left=n.x+'px';el.style.top=n.y+'px';wfLayout();
+  };
+  var up=function(){el.style.zIndex='';removeEventListener('mousemove',mv);removeEventListener('mouseup',up)};
+  addEventListener('mousemove',mv);addEventListener('mouseup',up);
+}
+function wfSelect(n){
+  document.querySelectorAll('.wf-node').forEach(function(x){x.classList.toggle('sel',x.id===n.id)});
+  E('wf-cfg-t').textContent='配置 · '+n.label;
+  E('wf-cfg-b').innerHTML=WF_CFG[n.id]||'<div class="hint">该节点暂无演示配置。</div>';
+  E('wf-cfg').classList.add('show');
+}
+function wfCloseCfg(){E('wf-cfg').classList.remove('show');document.querySelectorAll('.wf-node').forEach(function(x){x.classList.remove('sel')})}
+function wfAdd(icon,label){
+  wfSeq++;
+  var n={id:'x'+wfSeq,x:40+(wfSeq*72)%540,y:300+(wfSeq%2)*62,icon:icon,label:label};
+  WF_NODES.push(n);wfMount(n);wfLayout();
+  toast('已添加节点：'+label+'（可拖动；正式版支持从端口拖出连线）');
+}
+function wfStopClear(){wfTimers.forEach(clearTimeout);wfTimers=[]}
+function wfRun(){
+  if(wfRunning)return;
+  wfRunning=true;wfStopClear();
+  document.querySelectorAll('.wf-node').forEach(function(n){n.classList.remove('done')});
+  document.querySelectorAll('.wf-edge').forEach(function(p){p.classList.remove('lit')});
+  var order=['n1','n2','n3','n4','n6','n5'];
+  order.forEach(function(id,i){
+    wfTimers.push(setTimeout(function(){
+      var el=document.getElementById(id);
+      if(el)el.classList.add('done');
+      document.querySelectorAll('.wf-edge[data-f="'+id+'"]').forEach(function(p){p.classList.add('lit')});
+      if(i===order.length-1){wfRunning=false;wfResults('n5');toast('工作流运行完成 · 耗时 3.2s · 输出 24,132 行')}
+    },520*(i+1)));
+  });
+}
+function wfStop(){wfStopClear();wfRunning=false;toast('工作流已停止','err')}
+function wfRT(t,k){
+  t.parentElement.querySelectorAll('.r-tab').forEach(function(x){x.classList.toggle('active',x===t)});
+  ['data','meta','msg'].forEach(function(i){E('wf-r-'+i).classList.toggle('on',i===k)});
+}
+function wfResults(id){
+  E('wf-res').classList.add('show');
+  var n=WF_NODES.filter(function(x){return x.id===id})[0];
+  E('wf-res-t').textContent='输出 · '+(n?n.label:'节点')+' · 24,132 行（预览前 100 行）';
+  E('wf-r-data').querySelector('.r-head').textContent='数据流快照（该节点执行后的输出，对应 Alteryx Browse）';
+  E('wf-r-table').innerHTML='<thead><tr>'+WFDATA.head.map(function(h){return '<th>'+h+'</th>'}).join('')+'</tr></thead><tbody>'+
+    WFDATA.rows.map(function(r){return '<tr><td><b>'+r[0]+'</b></td>'+r.slice(1,5).map(function(c){return '<td>'+c+'</td>'}).join('')+'<td>'+tag(r[5])+'</td></tr>'}).join('')+'</tbody>';
+  E('wf-r-mtable').innerHTML='<thead><tr><th>字段</th><th>类型</th><th>空值率</th></tr></thead><tbody>'+
+    WFMETA.map(function(m){return '<tr><td><b>'+m[0]+'</b></td><td>'+m[1]+'</td><td>'+m[2]+'</td></tr>'}).join('')+'</tbody>';
+  E('wf-r-log').innerHTML=[
+    '08:50:01  INFO  工作流 WF-003 开始运行（V2 · 手动触发）',
+    '08:50:01  INFO  [主数据输入] 读取物料存量 25,481 行 (0.8s)',
+    '08:50:02  INFO  [码值映射] 转换 25,478 行 · 异常 3 行 (0.6s)',
+    '08:50:03  INFO  [过滤] 命中 24,316 行 / 25,478 (0.9s)',
+    '08:50:04  WARN  [去重] 发现疑似重复 184 行，按策略保留最早记录 (1.1s)',
+    '08:50:05  INFO  [写入主数据] 生成批量审批单，写入 24,132 行 (1.4s)',
+    '08:50:05  INFO  运行完成 · 总耗时 3.2s'
+  ].map(function(l){return '<div style="color:'+(l.indexOf('WARN')>=0?'#b45309':'#334155')+'">'+l+'</div>'}).join('');
+}
+
+/* ===== 初始化 ===== */
+function initStaticCharts(){
+  var qs=[],qlbl=[];
+  for(var i=0;i<30;i++){qs.push(+(92.8+Math.sin(i/4.5)*0.9+(i/30)*1.1).toFixed(1));qlbl.push(i%6===0?(i+1+'日'):'');}
+  var qaxis=function(v){return v.toFixed(1)};
+  svgLine(E('q-trend'),qs,qlbl,{w:600,h:200,axis:qaxis});
+  svgBar(E('q-dim'),[{n:'完整性',v:128},{n:'唯一性',v:36},{n:'合法性',v:12},{n:'一致性',v:5},{n:'及时性',v:23}],{w:600,h:200,axis:function(v){return fmtN(Math.round(v))}});
+  svgLine(E('p2-line'),qs,qlbl,{w:640,h:200,axis:qaxis});
+  svgBar(E('p2-dim'),[{n:'完整性',v:128},{n:'唯一性',v:36},{n:'合法性',v:12},{n:'一致性',v:5},{n:'及时性',v:23}],{w:440,h:200,axis:function(v){return fmtN(Math.round(v))}});
+  svgLine(E('p3-line'),[9800,11200,10600,12400,11800,13100,12482],['11-10','11-11','11-12','11-13','11-14','11-15','11-16'],{w:640,h:200});
+  svgDonut(E('p3-donut'),[{n:'ERP',v:41.2},{n:'CRM',v:28.4},{n:'SRM',v:18.6},{n:'其他',v:11.8}],{w:280,h:200});
+}
+renderDom('material');
+wzGo(1);
+E('wz-prev').onclick=function(){wzGo(wzStep-1)};
+E('wz-next').onclick=function(){wzGo(wzStep+1)};
+document.querySelectorAll('.fld input').forEach(function(c){c.style.pointerEvents='none'});
+initStaticCharts();
+dashRender();
+</script>
+</body>
+</html>

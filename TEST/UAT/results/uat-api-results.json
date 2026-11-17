@@ -1,0 +1,330 @@
+{
+  "suite": "MasterHub UAT API",
+  "baseUrl": "http://localhost:3000",
+  "startedAt": "2026-11-17T04:01:49.398Z",
+  "total": 40,
+  "pass": 40,
+  "fail": 0,
+  "results": [
+    {
+      "id": "UAT-AUTH-01",
+      "name": "管理员有效登录",
+      "module": "AUTH",
+      "status": "PASS",
+      "note": "token=eyJhbGciOiJI...",
+      "ms": 61
+    },
+    {
+      "id": "UAT-AUTH-02",
+      "name": "错误密码拒绝",
+      "module": "AUTH",
+      "status": "PASS",
+      "note": "msg=用户名或密码错误",
+      "ms": 46
+    },
+    {
+      "id": "UAT-AUTH-03",
+      "name": "获取当前用户信息",
+      "module": "AUTH",
+      "status": "PASS",
+      "note": "roles=SYS_ADMIN",
+      "ms": 2
+    },
+    {
+      "id": "UAT-AUTH-04",
+      "name": "未认证访问拦截",
+      "module": "AUTH",
+      "status": "PASS",
+      "note": "http=401",
+      "ms": 2
+    },
+    {
+      "id": "UAT-AUTH-05",
+      "name": "业务角色登录（steward）",
+      "module": "AUTH",
+      "status": "PASS",
+      "note": "steward/leader 均登录成功",
+      "ms": 94
+    },
+    {
+      "id": "UAT-META-01",
+      "name": "数据域列表查询",
+      "module": "META",
+      "status": "PASS",
+      "note": "域=material/customer/supplier",
+      "ms": 1
+    },
+    {
+      "id": "UAT-META-02",
+      "name": "模型与字段查询",
+      "module": "META",
+      "status": "PASS",
+      "note": "模型=material，名称键=materialName",
+      "ms": 2
+    },
+    {
+      "id": "UAT-META-03",
+      "name": "码表列表查询",
+      "module": "META",
+      "status": "PASS",
+      "note": "码表数=13",
+      "ms": 2
+    },
+    {
+      "id": "UAT-MD-01",
+      "name": "列表分页查询",
+      "module": "MD",
+      "status": "PASS",
+      "note": "total=56",
+      "ms": 1
+    },
+    {
+      "id": "UAT-MD-02",
+      "name": "新增草稿",
+      "module": "MD",
+      "status": "PASS",
+      "note": "id=91",
+      "ms": 1
+    },
+    {
+      "id": "UAT-MD-03",
+      "name": "提交审批",
+      "module": "MD",
+      "status": "PASS",
+      "note": "进入审批中",
+      "ms": 2
+    },
+    {
+      "id": "UAT-MD-04",
+      "name": "两级审批通过并发布",
+      "module": "MD",
+      "status": "PASS",
+      "note": "发布成功，主数据编码=WL202611170037",
+      "ms": 10
+    },
+    {
+      "id": "UAT-MD-05",
+      "name": "版本历史查询",
+      "module": "MD",
+      "status": "PASS",
+      "note": "当前 v1，历史 1 个版本",
+      "ms": 1
+    },
+    {
+      "id": "UAT-MD-06",
+      "name": "批量冻结/解冻",
+      "module": "MD",
+      "status": "PASS",
+      "note": "冻结→解冻状态流转正确",
+      "ms": 4
+    },
+    {
+      "id": "UAT-MD-07",
+      "name": "导出 CSV",
+      "module": "MD",
+      "status": "PASS",
+      "note": "material-2026-11-17120149.csv（58 行）",
+      "ms": 2
+    },
+    {
+      "id": "UAT-IMP-01",
+      "name": "下载导入模板",
+      "module": "IMP",
+      "status": "PASS",
+      "note": "material-导入模板.csv，表头=物料名称,规格型号,计量单位,物料分类,品牌,参考单价,备注,上级物料...",
+      "ms": 2
+    },
+    {
+      "id": "UAT-IMP-02",
+      "name": "导入预校验（含错误行）",
+      "module": "IMP",
+      "status": "PASS",
+      "note": "批次 #29：合法 1 行，非法 1 行",
+      "ms": 1
+    },
+    {
+      "id": "UAT-IMP-03",
+      "name": "导入提交",
+      "module": "IMP",
+      "status": "PASS",
+      "note": "code=0，{\"id\":29,\"domain_code\":\"material\",\"filename\":\"uat-109097.csv",
+      "ms": 3
+    },
+    {
+      "id": "UAT-IMP-04",
+      "name": "导入批次列表",
+      "module": "IMP",
+      "status": "PASS",
+      "note": "批次 total=29",
+      "ms": 2
+    },
+    {
+      "id": "UAT-APR-01",
+      "name": "审批流程定义列表",
+      "module": "APR",
+      "status": "PASS",
+      "note": "流程数=11",
+      "ms": 1
+    },
+    {
+      "id": "UAT-APR-02",
+      "name": "审批待办查询",
+      "module": "APR",
+      "status": "PASS",
+      "note": "steward 待办 13 条",
+      "ms": 2
+    },
+    {
+      "id": "UAT-APR-03",
+      "name": "发起抄送审批",
+      "module": "APR",
+      "status": "PASS",
+      "note": "抄送人=1，提交成功",
+      "ms": 8
+    },
+    {
+      "id": "UAT-WF-01",
+      "name": "工作流元数据与定义",
+      "module": "WF",
+      "status": "PASS",
+      "note": "算子 13 项，定义 22 个",
+      "ms": 5
+    },
+    {
+      "id": "UAT-WF-02",
+      "name": "执行工作流运行",
+      "module": "WF",
+      "status": "PASS",
+      "note": "运行 WF-MAT-CLEAN 成功，历史 total=59",
+      "ms": 5
+    },
+    {
+      "id": "UAT-QA-01",
+      "name": "质量总览",
+      "module": "QA",
+      "status": "PASS",
+      "note": "score=94.2",
+      "ms": 2
+    },
+    {
+      "id": "UAT-QA-02",
+      "name": "执行全域巡检",
+      "module": "QA",
+      "status": "PASS",
+      "note": "检查 107 项，问题 6 条，评分 94.4",
+      "ms": 3
+    },
+    {
+      "id": "UAT-QA-03",
+      "name": "质量问题清单",
+      "module": "QA",
+      "status": "PASS",
+      "note": "待整改 74 条",
+      "ms": 1
+    },
+    {
+      "id": "UAT-SCH-01",
+      "name": "调度任务列表",
+      "module": "SCH",
+      "status": "PASS",
+      "note": "任务 4 个",
+      "ms": 2
+    },
+    {
+      "id": "UAT-SCH-02",
+      "name": "手动执行与运行历史",
+      "module": "SCH",
+      "status": "PASS",
+      "note": "执行 SCH-DQ-DAILY 成功，历史 total=65",
+      "ms": 5
+    },
+    {
+      "id": "UAT-COL-01",
+      "name": "采集源列表查询",
+      "module": "COL",
+      "status": "PASS",
+      "note": "源 17 个",
+      "ms": 2
+    },
+    {
+      "id": "UAT-COL-02",
+      "name": "创建数据库直连采集源",
+      "module": "COL",
+      "status": "PASS",
+      "note": "源 #18，路径=/Users/wadesong/Desktop/TEST/MASTERHUB/TEST/UAT/results/uat-src-109097.db",
+      "ms": 5
+    },
+    {
+      "id": "UAT-COL-03",
+      "name": "首次采集（全量 5 行）",
+      "module": "COL",
+      "status": "PASS",
+      "note": "拉取 5 行，水位=2026-01-05 08:00:00",
+      "ms": 2
+    },
+    {
+      "id": "UAT-COL-04",
+      "name": "增量采集仅拉取新数据",
+      "module": "COL",
+      "status": "PASS",
+      "note": "仅拉取 2 行，水位推进到 2026-07-02 10:00:00",
+      "ms": 2
+    },
+    {
+      "id": "UAT-COL-05",
+      "name": "无增量返回空结果",
+      "module": "COL",
+      "status": "PASS",
+      "note": "skipped=true，未生成批次",
+      "ms": 1
+    },
+    {
+      "id": "UAT-COL-06",
+      "name": "采集执行留痕",
+      "module": "COL",
+      "status": "PASS",
+      "note": "共 20 条，最近一次=无增量",
+      "ms": 2
+    },
+    {
+      "id": "UAT-INT-01",
+      "name": "分发事件列表",
+      "module": "INT",
+      "status": "PASS",
+      "note": "total=182",
+      "ms": 1
+    },
+    {
+      "id": "UAT-NTF-01",
+      "name": "站内通知列表",
+      "module": "NTF",
+      "status": "PASS",
+      "note": "最新通知：「UAT 直连源」采集完成",
+      "ms": 2
+    },
+    {
+      "id": "UAT-NTF-02",
+      "name": "标记已读",
+      "module": "NTF",
+      "status": "PASS",
+      "note": "未读 4 → 0",
+      "ms": 5
+    },
+    {
+      "id": "UAT-ST-01",
+      "name": "仪表板统计",
+      "module": "ST",
+      "status": "PASS",
+      "note": "volume/quality 指标正常",
+      "ms": 2
+    },
+    {
+      "id": "UAT-ST-02",
+      "name": "审计日志查询",
+      "module": "ST",
+      "status": "PASS",
+      "note": "total=1043",
+      "ms": 2
+    }
+  ]
+}
