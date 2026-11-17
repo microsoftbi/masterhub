@@ -70,18 +70,20 @@ npm install
 npm run dev
 ```
 
-浏览器打开 <http://localhost:5173>，使用下方账号登录。
+浏览器打开 <http://localhost:5173>，使用管理员分配的账号登录。
 
 首次启动会自动建表并写入演示数据（5 个数据域、5 个模型、码表、审批流程定义与 4 个账号）。如需重置环境，停止服务后删除 `server/data/masterhub.db` 再启动即可。
 
 ### 演示账号
 
-| 账号 | 密码 | 姓名 | 角色 | 典型用途 |
-| --- | --- | --- | --- | --- |
-| admin | admin123 | 平台管理员 | 系统管理员 | 建模、码表、权限、全部功能 |
-| steward | steward123 | 林治理 | 数据治理岗 | 审批复审、质量巡检、集成配置 |
-| leader | leader123 | 周主管 | 部门主管 | 审批初审 |
-| buyer | buyer123 | 陈采购 | 业务专员 | 主数据录入与提交 |
+| 账号 | 姓名 | 角色 | 典型用途 |
+| --- | --- | --- | --- |
+| admin | 平台管理员 | 系统管理员 | 建模、码表、权限、全部功能 |
+| steward | 林治理 | 数据治理岗 | 审批复审、质量巡检、集成配置 |
+| leader | 周主管 | 部门主管 | 审批初审 |
+| buyer | 陈采购 | 业务专员 | 主数据录入与提交 |
+
+> 初始密码由系统管理员在部署时设置；演示环境如需账号口令，请联系管理员获取，请勿在文档、代码或工单中明文留存密码。
 
 ## 内置数据域
 
@@ -132,7 +134,7 @@ GET /open/v1/master/{domain}?cursor={lastId}
 ```bash
 curl -s -X POST http://localhost:3000/api/v1/auth/login \
   -H 'Content-Type: application/json' \
-  -d '{"username":"admin","password":"admin123"}'
+  -d '{"username":"admin","password":"<你的密码>"}'
 ```
 
 ```json

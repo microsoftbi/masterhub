@@ -3,7 +3,7 @@
 本手册面向业务用户与管理员，按「登录 → 看板 → 建模 → 录入 → 审批 → 分发 → 治理」的顺序介绍系统各模块的操作。文中截图均来自系统实际运行界面。
 
 - 环境地址：前端 <http://localhost:5173>，后端接口 <http://localhost:3000>
-- 演示账号见 [README](README.md#演示账号)；不同角色看到的菜单与按钮不同
+- 登录账号由系统管理员开通；不同角色看到的菜单与按钮不同
 
 ---
 
@@ -13,12 +13,14 @@
 
 ![登录页](docs/images/guide/01-登录页.jpg)
 
-| 账号 | 密码 | 角色 |
-| --- | --- | --- |
-| admin | admin123 | 系统管理员 |
-| steward | steward123 | 数据治理岗 |
-| leader | leader123 | 部门主管 |
-| buyer | buyer123 | 业务专员 |
+| 账号 | 角色 |
+| --- | --- |
+| admin | 系统管理员 |
+| steward | 数据治理岗 |
+| leader | 部门主管 |
+| buyer | 业务专员 |
+
+> 初始密码由系统管理员在部署时设置，如需演示账号请联系管理员获取，请勿在文档或代码中留存密码。
 
 ## 2. 界面导航
 
@@ -272,7 +274,7 @@
 ```bash
 curl -s -X POST http://localhost:3000/api/v1/auth/login \
   -H 'Content-Type: application/json' \
-  -d '{"username":"admin","password":"admin123"}'
+  -d '{"username":"admin","password":"<你的密码>"}'
 ```
 
 返回的 `data.token` 用于后续请求头；有效期为 `session.timeoutHours`（默认 8 小时）。
